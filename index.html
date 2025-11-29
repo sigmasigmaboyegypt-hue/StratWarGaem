@@ -14,87 +14,116 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            padding: 10px;
+            padding: 8px;
+            touch-action: none;
         }
 
+        /* Mobile First Design */
         .header { 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center; 
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             width: 100%;
-            padding: 12px 15px; 
-            background: rgba(30, 30, 46, 0.9);
-            box-shadow:0 4px 20px rgba(0,0,0,0.6);
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 12px;
+            background: rgba(30, 30, 46, 0.95);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            border-radius: 12px;
+            margin-bottom: 8px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            flex-wrap: wrap;
-            gap: 10px;
         }
+
         .header h1 { 
             color:#f1c40f; 
-            font-size:1.5rem; 
+            font-size: 1.4rem; 
             text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-            letter-spacing: 0.5px;
+            text-align: center;
             white-space: nowrap;
         }
-        .header .buttons { display:flex; gap:8px; flex-wrap: wrap; }
+
+        .button-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .header button { 
-            border:none; 
-            padding:6px 12px; 
-            border-radius:6px; 
-            font-weight:bold; 
-            cursor:pointer; 
-            transition:0.3s; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 0.85rem;
-            white-space: nowrap;
+            border: none; 
+            padding: 10px 14px;
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 80px;
+            max-width: 120px;
+            touch-action: manipulation;
         }
-        .soldier-btn{ background: linear-gradient(to bottom, #7f8c8d, #636e72); color: white; } 
-        .special-btn{ background: linear-gradient(to bottom, #9b59b6, #8e44ad); color: white; }
-        .delete-btn{ background: linear-gradient(to bottom, #e74c3c, #c0392b); color: white; } 
-        .start-btn{ background: linear-gradient(to bottom, #2ecc71, #27ae60); color: white; } 
-        .pause-btn{ background: linear-gradient(to bottom, #e67e22, #d35400); color: white; }
-        .auto-btn{ background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white; }
-        .header button:hover{ transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .header button:active{ transform: translateY(0); }
-        .header button:disabled{ opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .soldier-btn{ background: linear-gradient(135deg, #7f8c8d, #636e72); color: white; } 
+        .special-btn{ background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+        .delete-btn{ background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; } 
+        .start-btn{ background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; } 
+        .pause-btn{ background: linear-gradient(135deg, #e67e22, #d35400); color: white; }
+        .auto-btn{ background: linear-gradient(135deg, #f1c40f, #f39c12); color: white; }
+        
+        .header button:hover, .header button:active { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        .header button:active {
+            transform: translateY(0);
+        }
 
         .main-container {
             display: flex;
             flex: 1;
-            gap: 10px;
+            gap: 8px;
             min-height: 0;
+            flex-direction: column;
         }
 
         .stats-panel {
-            background: rgba(30, 30, 46, 0.9);
-            padding: 15px;
+            background: rgba(30, 30, 46, 0.95);
+            padding: 12px;
             border-radius: 10px;
-            width: 200px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            min-height: fit-content;
         }
 
         .stats-panel h3 {
             color: #f1c40f;
-            margin-bottom: 12px;
+            grid-column: 1 / -1;
             text-align: center;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 6px;
             font-size: 1.1rem;
+            margin-bottom: 4px;
         }
 
         .stat-row {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
-            font-size: 0.9rem;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .red-stat { color: #e74c3c; font-weight: bold; }
@@ -105,45 +134,47 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            position: relative;
         }
 
         #gameCanvas { 
             flex: 1;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-radius:10px; 
-            box-shadow:0 0 20px rgba(0,0,0,0.8);
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
             border: 1px solid rgba(255, 255, 255, 0.1);
             width: 100%;
             height: 100%;
-            min-height: 0;
+            min-height: 300px;
+            touch-action: none;
         }
 
         .instructions {
-            margin-top: 8px;
-            background: rgba(30, 30, 46, 0.7);
-            padding: 10px 12px;
+            background: rgba(30, 30, 46, 0.8);
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
             font-size: 0.8rem;
             color: #aaa;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            line-height: 1.4;
+            line-height: 1.3;
+            margin-top: 6px;
         }
 
-        /* Updated Notification Bar */
+        /* Notification */
         .notification {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 10px 16px;
+            top: 20px;
+            right: 20px;
+            padding: 12px 18px;
             background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white;
-            border-radius: 6px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             z-index: 1500;
             transform: translateX(150%);
             transition: transform 0.4s ease;
-            max-width: 280px;
+            max-width: 300px;
             font-weight: 600;
             font-size: 0.9rem;
             text-align: center;
@@ -166,7 +197,7 @@
             background: linear-gradient(135deg, #3498db, #2980b9);
         }
 
-        /* Victory Modal */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -174,48 +205,36 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(5px);
+            padding: 20px;
         }
         
         .modal-content {
             background: linear-gradient(145deg, #2c3e50, #34495e);
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             text-align: center;
-            width: 90%;
+            width: 100%;
             max-width: 400px;
             border: 2px solid rgba(241, 196, 15, 0.5);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .modal-content::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(241, 196, 15, 0.1) 0%, transparent 70%);
-            z-index: -1;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
         }
         
         .modal h2 { 
-            font-size: 2rem; 
+            font-size: 1.8rem; 
             margin-bottom: 15px; 
             color: #f1c40f;
             text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
         }
         
         .winner-text {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 15px 0;
             padding: 12px;
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.3);
@@ -223,55 +242,55 @@
         
         .winner-red { 
             color: #e74c3c; 
-            text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
             border: 2px solid rgba(231, 76, 60, 0.3);
         }
         
         .winner-blue { 
             color: #3498db; 
-            text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
             border: 2px solid rgba(52, 152, 219, 0.3);
         }
         
         .modal-buttons {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            gap: 12px;
             margin-top: 20px;
         }
         
         .modal-btn {
-            padding: 10px 25px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             font-weight: bold;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            flex: 1;
         }
         
         .play-again-btn {
-            background: linear-gradient(to right, #2ecc71, #1abc9c);
+            background: linear-gradient(135deg, #2ecc71, #1abc9c);
             color: white;
         }
         
         .close-modal-btn {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
         }
         
         .modal-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
 
+        /* Animations */
         .damage-text {
             position: absolute;
             color: #ff6b6b;
             font-weight: bold;
             pointer-events: none;
             animation: floatUp 1s ease-out forwards;
+            font-size: 14px;
         }
 
         @keyframes floatUp {
@@ -279,69 +298,130 @@
             100% { transform: translateY(-30px); opacity: 0; }
         }
 
-        .special-unit {
-            animation: pulse 2s infinite;
+        /* Desktop Styles */
+        @media (min-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+                text-align: left;
+                margin-right: 20px;
+            }
+            
+            .button-groups {
+                flex-direction: row;
+                justify-content: flex-end;
+                gap: 15px;
+            }
+            
+            .button-row {
+                gap: 8px;
+            }
+            
+            .header button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                min-width: 90px;
+            }
+            
+            .main-container {
+                flex-direction: row;
+                gap: 12px;
+            }
+            
+            .stats-panel {
+                width: 220px;
+                display: flex;
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .stats-panel h3 {
+                margin-bottom: 10px;
+            }
+            
+            .stat-row {
+                margin: 6px 0;
+                padding: 6px 8px;
+            }
+            
+            .instructions {
+                font-size: 0.85rem;
+                padding: 12px;
+            }
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        @media (min-width: 1024px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header button {
+                padding: 10px 18px;
+                font-size: 1rem;
+                min-width: 100px;
+            }
+            
+            .stats-panel {
+                width: 250px;
+            }
         }
 
-        /* Button groups for left and right sides */
-        .unit-buttons {
-            display: flex;
-            gap: 6px;
+        /* Mobile Landscape */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 5px;
+            }
+            
+            .header {
+                flex-direction: row;
+                padding: 8px 12px;
+                margin-bottom: 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .header button {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+                min-width: 70px;
+            }
+            
+            .instructions {
+                display: none;
+            }
         }
-
-        .control-buttons {
-            display: flex;
-            gap: 6px;
-        }
-
-        /* Unit counters */
-        .unit-counter {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.8rem;
-            margin-top: 8px;
-        }
-
-        .counter-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .red-dot { background: #e74c3c; }
-        .blue-dot { background: #3498db; }
-        .purple-dot { background: #9b59b6; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>⚔️ Circle Battle</h1>
-        <div class="buttons">
-            <!-- Unit selection buttons on the left -->
-            <div class="unit-buttons">
+        <div class="button-groups">
+            <div class="button-row">
                 <button class="soldier-btn" id="placeSoldier">👤 Soldier</button>
                 <button class="special-btn" id="placeTank">🛡️ Tank</button>
                 <button class="special-btn" id="placeHealer">❤️ Healer</button>
-                <button class="delete-btn" id="deleteTool">🗑️ Delete</button>
             </div>
-            
-            <!-- Control buttons on the right -->
-            <div class="control-buttons">
+            <div class="button-row">
+                <button class="delete-btn" id="deleteTool">🗑️ Delete</button>
                 <button class="start-btn" id="startBtn">▶️ Start</button>
                 <button class="pause-btn" id="pauseBtn">⏸️ Pause</button>
-                <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
+                <button class="auto-btn" id="autoPlaceBtn">🤖 Auto</button>
             </div>
         </div>
     </div>
 
-    <!-- Updated Notification Bar -->
     <div class="notification" id="notification">Placing: Soldier (Auto Team)</div>
 
     <div class="main-container">
@@ -367,26 +447,13 @@
                 <span>Status:</span>
                 <span id="gameStatus">Paused</span>
             </div>
-            
-            <div class="unit-counter">
-                <div class="counter-dot red-dot"></div>
-                <span>Soldiers: <span id="redSoldiers">0</span></span>
-            </div>
-            <div class="unit-counter">
-                <div class="counter-dot blue-dot"></div>
-                <span>Soldiers: <span id="blueSoldiers">0</span></span>
-            </div>
-            <div class="unit-counter">
-                <div class="counter-dot purple-dot"></div>
-                <span>Specials: <span id="specialCount">0</span></span>
-            </div>
         </div>
 
         <div class="game-area">
             <canvas id="gameCanvas"></canvas>
             
             <div class="instructions">
-                <p><strong>🎯 Instructions:</strong> Place units - LEFT side = RED, RIGHT side = BLUE. Delete tool removes units. Start battle to begin!</p>
+                <strong>🎯 Instructions:</strong> Place units - LEFT side = RED, RIGHT side = BLUE. Delete tool removes units.
             </div>
         </div>
     </div>
@@ -421,15 +488,22 @@
         const gameStatusEl = document.getElementById("gameStatus");
         const finalTimeEl = document.getElementById("finalTime");
         const remainingUnitsEl = document.getElementById("remainingUnits");
-        const redSoldiersEl = document.getElementById("redSoldiers");
-        const blueSoldiersEl = document.getElementById("blueSoldiers");
-        const specialCountEl = document.getElementById("specialCount");
 
         // Set canvas size to fit available space
         function resizeCanvas() {
             const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            const header = document.querySelector('.header');
+            const statsPanel = document.querySelector('.stats-panel');
+            const instructions = document.querySelector('.instructions');
+            
+            const availableHeight = window.innerHeight - header.offsetHeight - instructions.offsetHeight - 40;
+            const availableWidth = container.clientWidth;
+            
+            canvas.width = availableWidth;
+            canvas.height = Math.max(300, availableHeight);
+            
+            // Update base unit size based on canvas size
+            baseUnitSize = Math.max(15, Math.min(25, canvas.width / 40));
         }
 
         let placingMode = "soldier";
@@ -467,20 +541,32 @@
             }, 3000);
         }
 
-        // Prevent scrolling on the page
-        document.addEventListener('wheel', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-
-        document.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
+        // Touch and mouse event handling
+        function getCanvasCoordinates(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
 
         canvas.addEventListener("mousemove", e => {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
+            const coords = getCanvasCoordinates(e.clientX, e.clientY);
+            mouseX = coords.x;
+            mouseY = coords.y;
         });
+
+        canvas.addEventListener("touchmove", e => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const coords = getCanvasCoordinates(e.touches[0].clientX, e.touches[0].clientY);
+                mouseX = coords.x;
+                mouseY = coords.y;
+            }
+        }, { passive: false });
 
         class DamageText {
             constructor(x, y, damage, isHeal = false) {
@@ -618,18 +704,10 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                // Add a subtle glow for special units
-                if (this.type !== 'soldier') {
-                    ctx.shadowColor = this.team === 'red' ? '#e74c3c' : '#3498db';
-                    ctx.shadowBlur = 10;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
-                
                 // Health bar
                 const barWidth = this.radius * 2.5;
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth, 6);
+                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 10, barWidth, 5);
                 
                 let healthColor;
                 const healthPercent = this.health / this.maxHealth;
@@ -638,24 +716,7 @@
                 else healthColor = '#e74c3c';
                 
                 ctx.fillStyle = healthColor;
-                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth * healthPercent, 6);
-                
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.strokeRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth, 6);
-                
-                // Team and type indicator
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius * 0.25, 0, Math.PI * 2);
-                ctx.fillStyle = this.team === 'red' ? '#c0392b' : '#2980b9';
-                ctx.fill();
-                
-                // Type indicator
-                if (this.type !== 'soldier') {
-                    ctx.fillStyle = 'white';
-                    ctx.font = `bold ${this.radius * 0.6}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(this.type === 'tank' ? 'T' : 'H', this.x, this.y + this.radius * 0.2);
-                }
+                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 10, barWidth * healthPercent, 5);
             }
 
             distanceTo(other) {
@@ -711,7 +772,6 @@
                                 target.health += healAmount;
                                 this.lastHeal = now;
                                 
-                                // Show heal effect
                                 damageTexts.push(new DamageText(
                                     target.x,
                                     target.y - target.radius - 10,
@@ -750,14 +810,12 @@
                         target.health -= this.attackPower;
                         this.lastAttack = now;
                         
-                        // Show damage number
                         damageTexts.push(new DamageText(
                             target.x,
                             target.y - target.radius - 10,
                             this.attackPower
                         ));
                         
-                        // Create attack effect
                         attackEffects.push(new AttackEffect(
                             target.x + (Math.random() - 0.5) * 10,
                             target.y + (Math.random() - 0.5) * 10,
@@ -771,27 +829,10 @@
         function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw grid
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.lineWidth = 1;
-            const gridSize = Math.max(30, Math.min(50, canvas.width / 20));
-            for (let x = 0; x <= canvas.width; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = 0; y <= canvas.height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            
-            // Draw team zones with more visible colors
-            ctx.fillStyle = 'rgba(231, 76, 60, 0.15)';
+            // Draw team zones
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.1)';
             ctx.fillRect(0, 0, canvas.width/2, canvas.height);
-            ctx.fillStyle = 'rgba(52, 152, 219, 0.15)';
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
             ctx.fillRect(canvas.width/2, 0, canvas.width/2, canvas.height);
             
             // Draw center line
@@ -805,33 +846,29 @@
             
             // Draw team labels
             ctx.fillStyle = 'rgba(231, 76, 60, 0.7)';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('🔴 RED TEAM', canvas.width/4, 25);
+            ctx.fillText('🔴 RED', canvas.width/4, 20);
             
             ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
-            ctx.fillText('🔵 BLUE TEAM', canvas.width*3/4, 25);
+            ctx.fillText('🔵 BLUE', canvas.width*3/4, 20);
         }
 
         function drawGhost() {
             if (!showGhost || placingMode === "delete") return;
             
             let color, radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
-            let team = "auto";
+            let team = mouseX < canvas.width/2 ? "red" : "blue";
             let type = "soldier";
             
-            // Determine team based on mouse position
             if (placingMode === "soldier") {
-                team = mouseX < canvas.width/2 ? "red" : "blue";
                 type = "soldier";
                 color = team === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(52, 152, 219, 0.5)";
             } else if (placingMode === "tank") {
-                team = mouseX < canvas.width/2 ? "red" : "blue";
                 type = "tank";
                 color = team === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(52, 152, 219, 0.5)";
                 radius = baseUnitSize * 1.3 * (Math.min(canvas.width, canvas.height) / 800);
             } else if (placingMode === "healer") {
-                team = mouseX < canvas.width/2 ? "red" : "blue";
                 type = "healer";
                 color = "rgba(155, 89, 182, 0.5)";
             }
@@ -843,31 +880,16 @@
             ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
             ctx.fillStyle = color;
             ctx.fill();
-            
-            // Add a pulsing effect to the ghost circle
-            ctx.strokeStyle = color.replace('0.5', '0.8');
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
         }
 
         function updateStats() {
             const redTeam = circles.filter(c => c.team === "red" && c.health > 0);
             const blueTeam = circles.filter(c => c.team === "blue" && c.health > 0);
-            const redSoldiers = redTeam.filter(c => c.type === "soldier").length;
-            const blueSoldiers = blueTeam.filter(c => c.type === "soldier").length;
-            const specialUnits = circles.filter(c => c.type !== "soldier").length;
             
             redCountEl.textContent = redTeam.length;
             blueCountEl.textContent = blueTeam.length;
             totalCountEl.textContent = circles.length;
             gameStatusEl.textContent = gameRunning ? "Running" : "Paused";
-            redSoldiersEl.textContent = redSoldiers;
-            blueSoldiersEl.textContent = blueSoldiers;
-            specialCountEl.textContent = specialUnits;
             
             if (gameRunning) {
                 battleDuration = Math.floor((performance.now() - battleStartTime) / 1000);
@@ -893,7 +915,7 @@
             remainingUnitsEl.textContent = winner === 'red' ? redTeam.length : blueTeam.length;
             
             gameOverModal.style.display = 'flex';
-            showNotification(`${winner === 'red' ? '🔴 Red' : '🔵 Blue'} team wins the battle!`, 'info');
+            showNotification(`${winner === 'red' ? '🔴 Red' : '🔵 Blue'} team wins!`, 'info');
         }
 
         function resetGame() {
@@ -906,8 +928,6 @@
             battleDuration = 0;
             gameOverModal.style.display = 'none';
             updateStats();
-            
-            // Reset placing mode to default
             placingMode = "soldier";
             showNotification('Game reset. Ready to place units.', 'info');
         }
@@ -918,31 +938,30 @@
 
         function autoPlaceUnits() {
             circles = [];
-            const padding = 50;
-            const centerY = canvas.height / 2;
+            const padding = 40;
             
             // Place red units on the left
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 4; i++) {
                 const x = padding + Math.random() * (canvas.width/2 - padding*2);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'red', 'soldier'));
             }
             
             // Place blue units on the right
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 4; i++) {
                 const x = canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'blue', 'soldier'));
             }
             
-            // Add a few special units
-            circles.push(new Circle(padding + 50, centerY - 50, 'red', 'tank'));
-            circles.push(new Circle(padding + 50, centerY + 50, 'red', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 50, centerY - 50, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 50, centerY + 50, 'blue', 'healer'));
+            // Add special units
+            circles.push(new Circle(padding + 30, canvas.height/2 - 30, 'red', 'tank'));
+            circles.push(new Circle(padding + 30, canvas.height/2 + 30, 'red', 'healer'));
+            circles.push(new Circle(canvas.width - padding - 30, canvas.height/2 - 30, 'blue', 'tank'));
+            circles.push(new Circle(canvas.width - padding - 30, canvas.height/2 + 30, 'blue', 'healer'));
             
             updateStats();
-            showNotification('Auto-placed units on battlefield!', 'info');
+            showNotification('Auto-placed units!', 'info');
         }
 
         function gameLoop() {
@@ -952,19 +971,14 @@
             const redTeam = circles.filter(c => c.team === "red");
             const blueTeam = circles.filter(c => c.team === "blue");
 
-            // Update and draw attack effects
             attackEffects = attackEffects.filter(effect => effect.draw());
-
-            // Update and draw damage texts
             damageTexts = damageTexts.filter(text => text.update());
             damageTexts.forEach(text => text.draw());
 
-            // Update circles with game speed adjustment
             for (let c of circles) {
                 let allies = circles.filter(x => x.team === c.team && x.health > 0);
                 let enemies = circles.filter(x => x.team !== c.team && x.health > 0);
                 
-                // Apply game speed to updates
                 for (let i = 0; i < gameSpeed; i++) {
                     c.updateAI(enemies, allies);
                 }
@@ -973,18 +987,12 @@
             }
 
             circles = circles.filter(c => c.health > 0);
-            
             updateStats();
-            
             requestAnimationFrame(gameLoop);
         }
 
-        canvas.addEventListener("click", e => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left, y = e.clientY - rect.top;
-
+        function handleCanvasClick(x, y) {
             if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer") {
-                
                 let type = placingMode;
                 let team = x < canvas.width/2 ? 'red' : 'blue';
                 
@@ -993,7 +1001,7 @@
                     circles.push(new Circle(x, y, team, type));
                     showNotification(`Placed ${type} on ${team} team`, 'info');
                 } else {
-                    showNotification('Cannot place unit here - space occupied', 'warning');
+                    showNotification('Space occupied', 'warning');
                 }
             } else if (placingMode === "delete") {
                 const beforeCount = circles.length;
@@ -1002,26 +1010,38 @@
                     showNotification('Unit deleted', 'warning');
                 }
             }
-            
             updateStats();
+        }
+
+        canvas.addEventListener("click", e => {
+            const coords = getCanvasCoordinates(e.clientX, e.clientY);
+            handleCanvasClick(coords.x, coords.y);
         });
+
+        canvas.addEventListener("touchstart", e => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const coords = getCanvasCoordinates(e.touches[0].clientX, e.touches[0].clientY);
+                handleCanvasClick(coords.x, coords.y);
+            }
+        }, { passive: false });
 
         // Button event listeners
         document.getElementById("placeSoldier").onclick = () => {
             placingMode = "soldier";
-            showNotification("Placing: 👤 Soldier (Auto Team)", 'info');
+            showNotification("Placing: 👤 Soldier", 'info');
             showGhost = true;
         };
         
         document.getElementById("placeTank").onclick = () => {
             placingMode = "tank";
-            showNotification("Placing: 🛡️ Tank (Auto Team)", 'info');
+            showNotification("Placing: 🛡️ Tank", 'info');
             showGhost = true;
         };
         
         document.getElementById("placeHealer").onclick = () => {
             placingMode = "healer";
-            showNotification("Placing: ❤️ Healer (Auto Team)", 'info');
+            showNotification("Placing: ❤️ Healer", 'info');
             showGhost = true;
         };
         
@@ -1049,7 +1069,7 @@
         document.getElementById("autoPlaceBtn").onclick = autoPlaceUnits;
 
         // Initialize
-        showNotification('🎮 Welcome to Circle Battle Simulator! Place units to begin.', 'info');
+        showNotification('🎮 Welcome! Place units to begin.', 'info');
         gameLoop();
     </script>
 </body>
