@@ -3,264 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Circle Battle Simulator</title>
+<title>Circle Battle Simulator - Modern Map</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',sans-serif;background:#121212;color:white;display:flex;flex-direction:column;}
-.header{width:100%;padding:10px 20px;background:#1a1a1a;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
-.header h1{font-size:1.5rem;color:#f1c40f;text-shadow:0 0 5px #f1c40f;}
-.controls{display:flex;gap:10px;flex-wrap:wrap;}
-button{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:0.2s;font-size:0.9rem;box-shadow:0 4px 10px rgba(0,0,0,0.5);}
-button:hover{opacity:0.85;transform:translateY(-2px);}
-#startBtn{background:#2ecc71;color:#121212;}
-#pauseBtn{background:#e67e22;color:#121212;}
-#teamRed{background:#e74c3c;color:white;}
-#teamBlue{background:#3498db;color:white;}
-#deleteTool{background:#95a5a6;color:#121212;}
-.stats{display:flex;gap:20px;padding:10px;background:#1a1a1a;justify-content:center;flex-wrap:wrap;font-size:0.95rem;}
-#notification{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:#222;padding:7px 15px;border-radius:8px;color:#f1c40f;font-weight:bold;font-size:0.95rem;z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,0.7);}
-canvas{flex:1;background:#181818;display:block;cursor:pointer;}
-.health-bar-bg{position:absolute;width:50px;height:6px;background:#333;border-radius:3px;pointer-events:none;}
-.health-bar-fill{height:6px;border-radius:3px;}
-@media (max-width:768px){
-    .header{flex-direction:column;align-items:center;}
-    .controls{justify-content:center;}
-    .stats{justify-content:center;}
-}
+    /* Reset */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #fff; overflow: hidden; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #1f1f1f; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .header h1 { color: #f1c40f; font-size: 1.5rem; }
+    .header .buttons { display: flex; gap: 10px; }
+    .header button { border:none; padding:6px 14px; border-radius:5px; font-weight:bold; cursor:pointer; transition:0.2s; }
+    .red-btn { background:#e74c3c;} .blue-btn{background:#3498db;} .delete-btn{background:#7f8c8d;} .start-btn{background:#2ecc71;} .pause-btn{background:#e67e22;}
+    .header button:hover{filter:brightness(1.2);}
+
+    /* Notification */
+    #placingNotification { position:absolute; top:60px; left:50%; transform:translateX(-50%); background:#333; padding:5px 12px; border-radius:5px; font-weight:bold; color:#f1c40f; box-shadow:0 2px 8px rgba(0,0,0,0.7); }
+
+    /* Canvas */
+    #gameCanvas { display:block; margin: 80px auto 0 auto; background: linear-gradient(135deg,#1a1a1a,#2a2a2a); border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.7); }
 </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Circle Battle Simulator</h1>
-    <div class="controls">
-        <button id="teamRed">Red</button>
-        <button id="teamBlue">Blue</button>
-        <button id="deleteTool">Delete</button>
-        <button id="startBtn">Start</button>
-        <button id="pauseBtn">Pause</button>
+    <div class="buttons">
+        <button class="red-btn" id="placeRed">Red</button>
+        <button class="blue-btn" id="placeBlue">Blue</button>
+        <button class="delete-btn" id="deleteTool">Delete</button>
+        <button class="start-btn" id="startBtn">Start</button>
+        <button class="pause-btn" id="pauseBtn">Pause</button>
     </div>
 </div>
 
-<div id="notification">Placing: Red</div>
-
-<div class="stats">
-    <div>Red: <span id="redCount">0</span></div>
-    <div>Blue: <span id="blueCount">0</span></div>
-</div>
-
-<canvas id="gameCanvas"></canvas>
+<div id="placingNotification">Placing: Red</div>
+<canvas id="gameCanvas" width="1000" height="600"></canvas>
 
 <script>
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight-document.querySelector('.header').offsetHeight-document.querySelector('.stats').offsetHeight;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const placingNotification = document.getElementById('placingNotification');
 
-let circles=[];
-let selectedCircle=null;
-let placingTool='red'; // 'red', 'blue', 'delete'
-let running=false;
+// Game State
+let placingMode = 'red'; // red, blue, delete
+let gameRunning = false;
+let circles = [];
+let selectedCircle = null;
 
-const redCountEl=document.getElementById('redCount');
-const blueCountEl=document.getElementById('blueCount');
-const startBtn=document.getElementById('startBtn');
-const pauseBtn=document.getElementById('pauseBtn');
-const notificationEl=document.getElementById('notification');
-
-document.getElementById('teamRed').addEventListener('click',()=>{placingTool='red';updateNotification();});
-document.getElementById('teamBlue').addEventListener('click',()=>{placingTool='blue';updateNotification();});
-document.getElementById('deleteTool').addEventListener('click',()=>{placingTool='delete';updateNotification();});
-startBtn.addEventListener('click',()=>running=true);
-pauseBtn.addEventListener('click',()=>running=false);
-
-function updateNotification(){
-    notificationEl.textContent='Placing: '+placingTool.charAt(0).toUpperCase()+placingTool.slice(1);
-}
-
-class Circle{
+// Circle Class
+class Circle {
     constructor(x,y,team){
-        this.x=x;
-        this.y=y;
+        this.x=x; this.y=y;
         this.team=team;
         this.radius=20;
-        this.maxHealth=100;
-        this.health=this.maxHealth;
-        this.speed=2;
-        this.attackPower=10;
-        this.controlledByPlayer=false;
-        this.targetX=null;
-        this.targetY=null;
-        this.attackCooldown=0;
+        this.health=100;
+        this.speed = team==='red'?1.8:2;
+        this.attackPower=team==='red'?10:12;
+        this.target=null;
+        this.isMoving=false;
     }
+
     draw(){
+        // Circle
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
-        ctx.fillStyle=this.team==='red'?'#e74c3c':'#3498db';
+        ctx.fillStyle = this.team==='red'?'#e74c3c':'#3498db';
         ctx.fill();
-        if(this===selectedCircle){
-            ctx.strokeStyle='#f1c40f';
-            ctx.lineWidth=3;
-            ctx.stroke();
-        }
-        // Health bar
-        ctx.fillStyle='#333';
-        ctx.fillRect(this.x-25,this.y-this.radius-12,50,6);
-        const hpRatio=this.health/this.maxHealth;
-        ctx.fillStyle=hpRatio>0.6?'#2ecc71':hpRatio>0.3?'#f39c12':'#e74c3c';
-        ctx.fillRect(this.x-25,this.y-this.radius-12,50*hpRatio,6);
-        ctx.strokeStyle='#fff';
-        ctx.lineWidth=1;
-        ctx.strokeRect(this.x-25,this.y-this.radius-12,50,6);
-    }
-    move(){
-        // Boundaries
-        if(this.x<this.radius)this.x=this.radius;
-        if(this.x>canvas.width-this.radius)this.x=canvas.width-this.radius;
-        if(this.y<this.radius)this.y=this.radius;
-        if(this.y>canvas.height-this.radius)this.y=canvas.height-this.radius;
+        if(this===selectedCircle){ ctx.strokeStyle='#f1c40f'; ctx.lineWidth=3; ctx.stroke();}
 
-        if(this.controlledByPlayer){
-            if(this.targetX!==null&&this.targetY!==null){
-                const dx=this.targetX-this.x;
-                const dy=this.targetY-this.y;
-                const dist=Math.sqrt(dx*dx+dy*dy);
-                if(dist>this.speed){
-                    this.x+=dx/dist*this.speed;
-                    this.y+=dy/dist*this.speed;
-                }else{
-                    this.x=this.targetX;
-                    this.y=this.targetY;
-                    this.targetX=null;
-                    this.targetY=null;
-                }
-            }
-        }else{
-            // AI logic with encirclement
-            let enemies=circles.filter(c=>c.team!==this.team);
-            if(enemies.length>0){
-                let nearest=null;
-                let minDist=Infinity;
-                for(const e of enemies){
-                    const dx=e.x-this.x;
-                    const dy=e.y-this.y;
-                    const d=Math.sqrt(dx*dx+dy*dy);
-                    if(d<minDist){minDist=d;nearest=e;}
-                }
-                if(nearest){
-                    const allies=circles.filter(c=>c.team===this.team && c!==this);
-                    const index=allies.indexOf(this);
-                    const angle=index/allies.length*Math.PI*2;
-                    const offsetX=Math.cos(angle)*30;
-                    const offsetY=Math.sin(angle)*30;
-                    const targetX=nearest.x+offsetX;
-                    const targetY=nearest.y+offsetY;
-                    const dx=targetX-this.x;
-                    const dy=targetY-this.y;
-                    const dist=Math.sqrt(dx*dx+dy*dy);
-                    if(dist>0){
-                        this.x+=dx/dist*this.speed;
-                        this.y+=dy/dist*this.speed;
-                    }
-                }
-            }
-        }
-        if(this.attackCooldown>0)this.attackCooldown--;
+        // Health Bar
+        ctx.fillStyle='#333';
+        ctx.fillRect(this.x-25,this.y-this.radius-15,50,8);
+        ctx.fillStyle=this.health>60?'#2ecc71':this.health>30?'#f39c12':'#e74c3c';
+        ctx.fillRect(this.x-25,this.y-this.radius-15,50*(this.health/100),8);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=1;
+        ctx.strokeRect(this.x-25,this.y-this.radius-15,50,8);
     }
-    attack(enemy){
-        if(this.attackCooldown===0){
-            enemy.health-=this.attackPower;
-            this.attackCooldown=30;
+
+    move(){
+        if(this.isMoving && this.target){
+            let dx=this.target.x-this.x;
+            let dy=this.target.y-this.y;
+            let dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist>this.speed){ this.x+=dx/dist*this.speed; this.y+=dy/dist*this.speed; }
+            else{ this.x=this.target.x; this.y=this.target.y; this.isMoving=false; }
+        }
+        // Stay in bounds
+        this.x=Math.max(this.radius, Math.min(canvas.width-this.radius,this.x));
+        this.y=Math.max(this.radius, Math.min(canvas.height-this.radius,this.y));
+    }
+
+    attack(target){
+        if(target && this.health>0 && target.health>0){
+            target.health-=this.attackPower*0.05;
         }
     }
+
     isColliding(other){
-        const dx=this.x-other.x;
-        const dy=this.y-other.y;
+        let dx=this.x-other.x;
+        let dy=this.y-other.y;
         return Math.sqrt(dx*dx+dy*dy)<this.radius+other.radius;
     }
 }
 
-function resolveCollisions(){
-    for(let i=0;i<circles.length;i++){
-        for(let j=i+1;j<circles.length;j++){
-            const c1=circles[i];
-            const c2=circles[j];
-            const dx=c2.x-c1.x;
-            const dy=c2.y-c1.y;
-            const dist=Math.sqrt(dx*dx+dy*dy);
-            const minDist=c1.radius+c2.radius;
-            if(dist<minDist && dist>0){
-                const overlap=(minDist-dist)/2;
-                c1.x-=dx/dist*overlap;
-                c1.y-=dy/dist*overlap;
-                c2.x+=dx/dist*overlap;
-                c2.y+=dy/dist*overlap;
-            }
-        }
-    }
+// Draw Grid + Bases
+function drawMap(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let x=0;x<=canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+    for(let y=0;y<=canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+    // Bases
+    ctx.fillStyle='rgba(231,76,60,0.1)'; ctx.fillRect(0,0,100,canvas.height);
+    ctx.fillStyle='rgba(52,152,219,0.1)'; ctx.fillRect(canvas.width-100,0,100,canvas.height);
 }
 
-function spawnCircle(x,y,team){circles.push(new Circle(x,y,team));updateCounts();}
-function updateCounts(){redCountEl.textContent=circles.filter(c=>c.team==='red').length;blueCountEl.textContent=circles.filter(c=>c.team==='blue').length;}
-
-canvas.addEventListener('click',(e)=>{
-    const rect=canvas.getBoundingClientRect();
-    const x=e.clientX-rect.left;
-    const y=e.clientY-rect.top;
-
-    if(placingTool==='delete'){
-        for(let i=circles.length-1;i>=0;i--){
-            const c=circles[i];
-            const dx=c.x-x;
-            const dy=c.y-y;
-            if(Math.sqrt(dx*dx+dy*dy)<c.radius){circles.splice(i,1);updateCounts();break;}
-        }
-        return;
-    }
-
-    let clicked=null;
-    for(let i=circles.length-1;i>=0;i--){
-        const c=circles[i];
-        const dx=c.x-x;
-        const dy=c.y-y;
-        if(Math.sqrt(dx*dx+dy*dy)<c.radius){clicked=c;break;}
-    }
-
-    if(clicked && running){
-        if(selectedCircle)selectedCircle.controlledByPlayer=false;
-        selectedCircle=clicked;
-        selectedCircle.controlledByPlayer=true;
-    }else if(selectedCircle && running){
-        selectedCircle.targetX=x;
-        selectedCircle.targetY=y;
-    }else if(!running){
-        spawnCircle(x,y,placingTool);
-    }
-});
-
+// Game Loop
 function gameLoop(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(running){
-        for(const c of circles)c.move();
-        resolveCollisions();
-        // Attack loop
-        for(const c of circles){
-            for(const e of circles){
-                if(c.team!==e.team && c.isColliding(e)){
-                    c.attack(e);
+    drawMap();
+    // Move & AI
+    if(gameRunning){
+        circles.forEach(c=>{
+            if(c!==selectedCircle){
+                // Simple AI: chase nearest enemy
+                let enemies=circles.filter(e=>e.team!==c.team && e.health>0);
+                if(enemies.length>0){
+                    let target=enemies.reduce((a,b)=>((Math.hypot(a.x-c.x,a.y-c.y)<Math.hypot(b.x-c.x,b.y-c.y))?a:b));
+                    let dx=target.x-c.x; let dy=target.y-c.y; let dist=Math.sqrt(dx*dx+dy*dy);
+                    if(dist>c.radius+target.radius){ c.x+=dx/dist*c.speed; c.y+=dy/dist*c.speed; }
+                    c.attack(target);
                 }
             }
-        }
-        circles=circles.filter(c=>c.health>0);
-        updateCounts();
-    }
-    for(const c of circles)c.draw();
+            c.move();
+            c.draw();
+        });
+    } else { circles.forEach(c=>c.draw()); }
+
+    // Remove dead
+    circles=circles.filter(c=>c.health>0);
+
     requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
-updateNotification();
-</script>
+// Canvas Click
+canvas.addEventListener('click',(e)=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left; const y=e.clientY-rect.top;
+    if(placingMode==='red'||placingMode==='blue'){
+        circles.push(new Circle(x,y,placingMode));
+    } else if(placingMode==='delete'){
+        circles=circles.filter(c=>Math.hypot(c.x-x,c.y-y)>c.radius);
+    }
+});
 
+// UI Buttons
+document.getElementById('placeRed').onclick=()=>{placingMode='red'; placingNotification.textContent='Placing: Red';}
+document.getElementById('placeBlue').onclick=()=>{placingMode='blue'; placingNotification.textContent='Placing: Blue';}
+document.getElementById('deleteTool').onclick=()=>{placingMode='delete'; placingNotification.textContent='Delete Tool Active';}
+document.getElementById('startBtn').onclick=()=>{gameRunning=true;}
+document.getElementById('pauseBtn').onclick=()=>{gameRunning=false;}
+
+gameLoop();
+</script>
 </body>
 </html>
