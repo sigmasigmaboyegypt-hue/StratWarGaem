@@ -41,30 +41,30 @@ canvas{flex:1;background:#181818;display:block;cursor:pointer;}
 <canvas id="gameCanvas"></canvas>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight - document.querySelector('.header').offsetHeight - document.querySelector('.stats').offsetHeight;
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight-document.querySelector('.header').offsetHeight-document.querySelector('.stats').offsetHeight;
 
-let circles = [];
-let selectedCircle = null;
-let placingTeam = 'red';
-let running = false;
-let gameTime = 0;
-let lastTime = Date.now();
+let circles=[];
+let selectedCircle=null;
+let placingTeam='red';
+let running=false;
+let gameTime=0;
+let lastTime=Date.now();
 
-// UI Elements
-const redCountEl = document.getElementById('redCount');
-const blueCountEl = document.getElementById('blueCount');
-const gameTimeEl = document.getElementById('gameTime');
-const startBtn = document.getElementById('startBtn');
-const pauseBtn = document.getElementById('pauseBtn');
+const redCountEl=document.getElementById('redCount');
+const blueCountEl=document.getElementById('blueCount');
+const gameTimeEl=document.getElementById('gameTime');
+const startBtn=document.getElementById('startBtn');
+const pauseBtn=document.getElementById('pauseBtn');
+
 document.getElementById('teamRed').addEventListener('click',()=>placingTeam='red');
 document.getElementById('teamBlue').addEventListener('click',()=>placingTeam='blue');
 startBtn.addEventListener('click',()=>running=true);
 pauseBtn.addEventListener('click',()=>running=false);
 
-class Circle {
+class Circle{
     constructor(x,y,team){
         this.x=x;
         this.y=y;
@@ -72,12 +72,13 @@ class Circle {
         this.radius=20;
         this.maxHealth=100;
         this.health=this.maxHealth;
-        this.speed = 2;
-        this.attackPower = 10;
+        this.speed=2;
+        this.attackPower=10;
         this.controlledByPlayer=false;
-        this.targetX = null;
-        this.targetY = null;
-        this.attackCooldown = 0;
+        this.targetX=null;
+        this.targetY=null;
+        this.attackCooldown=0;
+        this.encircleAngle=Math.random()*Math.PI*2; // For AI encirclement
     }
     draw(){
         ctx.beginPath();
@@ -115,30 +116,41 @@ class Circle {
                 }
             }
         }else{
-            // AI moves toward nearest enemy
-            let nearest=null;
-            let minDist=Infinity;
-            for(const c of circles){
-                if(c.team!==this.team){
-                    const dx=c.x-this.x;
-                    const dy=c.y-this.y;
+            // AI finds nearest enemy
+            let targets=circles.filter(c=>c.team!==this.team);
+            if(targets.length>0){
+                let nearest=null;
+                let minDist=Infinity;
+                for(const t of targets){
+                    const dx=t.x-this.x;
+                    const dy=t.y-this.y;
                     const d=Math.sqrt(dx*dx+dy*dy);
                     if(d<minDist){
                         minDist=d;
-                        nearest=c;
+                        nearest=t;
+                    }
+                }
+                if(nearest){
+                    // Encirclement: spread units around enemy
+                    const allies=circles.filter(c=>c.team===this.team && c!==this);
+                    const index=allies.indexOf(this);
+                    const angle=index/allies.length*Math.PI*2;
+                    const offsetX=Math.cos(angle)*25;
+                    const offsetY=Math.sin(angle)*25;
+                    const targetX=nearest.x+offsetX;
+                    const targetY=nearest.y+offsetY;
+
+                    const dx=targetX-this.x;
+                    const dy=targetY-this.y;
+                    const dist=Math.sqrt(dx*dx+dy*dy);
+                    if(dist>0){
+                        this.x+=dx/dist*this.speed;
+                        this.y+=dy/dist*this.speed;
                     }
                 }
             }
-            if(nearest){
-                const dx=nearest.x-this.x;
-                const dy=nearest.y-this.y;
-                const dist=Math.sqrt(dx*dx+dy*dy);
-                if(dist>0){
-                    this.x+=dx/dist*this.speed;
-                    this.y+=dy/dist*this.speed;
-                }
-            }
         }
+
         if(this.attackCooldown>0)this.attackCooldown--;
     }
     attack(enemy){
@@ -154,6 +166,27 @@ class Circle {
     }
 }
 
+// Simple collision resolution
+function resolveCollisions(){
+    for(let i=0;i<circles.length;i++){
+        for(let j=i+1;j<circles.length;j++){
+            const c1=circles[i];
+            const c2=circles[j];
+            const dx=c2.x-c1.x;
+            const dy=c2.y-c1.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            const minDist=c1.radius+c2.radius;
+            if(dist<minDist && dist>0){
+                const overlap=(minDist-dist)/2;
+                c1.x-=dx/dist*overlap;
+                c1.y-=dy/dist*overlap;
+                c2.x+=dx/dist*overlap;
+                c2.y+=dy/dist*overlap;
+            }
+        }
+    }
+}
+
 function spawnCircle(x,y,team){
     circles.push(new Circle(x,y,team));
     updateCounts();
@@ -166,7 +199,6 @@ function updateCounts(){
     blueCountEl.textContent=blues;
 }
 
-// Canvas click
 canvas.addEventListener('click',(e)=>{
     const rect=canvas.getBoundingClientRect();
     const x=e.clientX-rect.left;
@@ -182,16 +214,13 @@ canvas.addEventListener('click',(e)=>{
         }
     }
     if(clicked){
-        // Select unit
         if(selectedCircle)selectedCircle.controlledByPlayer=false;
         selectedCircle=clicked;
         selectedCircle.controlledByPlayer=true;
     }else if(selectedCircle && running){
-        // Move selected
         selectedCircle.targetX=x;
         selectedCircle.targetY=y;
     }else if(!running){
-        // Placement mode
         spawnCircle(x,y,placingTeam);
     }
 });
@@ -200,6 +229,7 @@ function gameLoop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(running){
         for(const c of circles)c.move();
+        resolveCollisions();
         // Attack collisions
         for(let i=0;i<circles.length;i++){
             for(let j=i+1;j<circles.length;j++){
@@ -212,7 +242,6 @@ function gameLoop(){
         // Remove dead
         circles=circles.filter(c=>c.health>0);
         updateCounts();
-        // Time
         const now=Date.now();
         gameTime+=(now-lastTime)/1000;
         lastTime=now;
@@ -220,7 +249,6 @@ function gameLoop(){
     }else{
         lastTime=Date.now();
     }
-    // Draw
     for(const c of circles)c.draw();
     requestAnimationFrame(gameLoop);
 }
