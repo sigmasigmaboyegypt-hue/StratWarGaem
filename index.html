@@ -64,7 +64,6 @@ document.getElementById('teamBlue').addEventListener('click',()=>placingTeam='bl
 startBtn.addEventListener('click',()=>running=true);
 pauseBtn.addEventListener('click',()=>running=false);
 
-// Circle class
 class Circle {
     constructor(x,y,team){
         this.x=x;
@@ -79,10 +78,8 @@ class Circle {
         this.targetX = null;
         this.targetY = null;
         this.attackCooldown = 0;
-        this.aiDir = Math.random()*Math.PI*2;
     }
     draw(){
-        // Circle
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
         ctx.fillStyle=this.team==='red'?'#e74c3c':'#3498db';
@@ -118,15 +115,29 @@ class Circle {
                 }
             }
         }else{
-            // AI random movement
-            this.x+=Math.cos(this.aiDir)*this.speed*0.5;
-            this.y+=Math.sin(this.aiDir)*this.speed*0.5;
-            if(Math.random()<0.02)this.aiDir=Math.random()*Math.PI*2;
-            // Bounce
-            if(this.x<this.radius){this.x=this.radius;this.aiDir=Math.PI-this.aiDir;}
-            if(this.x>canvas.width-this.radius){this.x=canvas.width-this.radius;this.aiDir=Math.PI-this.aiDir;}
-            if(this.y<this.radius){this.y=this.radius;this.aiDir=-this.aiDir;}
-            if(this.y>canvas.height-this.radius){this.y=canvas.height-this.radius;this.aiDir=-this.aiDir;}
+            // AI moves toward nearest enemy
+            let nearest=null;
+            let minDist=Infinity;
+            for(const c of circles){
+                if(c.team!==this.team){
+                    const dx=c.x-this.x;
+                    const dy=c.y-this.y;
+                    const d=Math.sqrt(dx*dx+dy*dy);
+                    if(d<minDist){
+                        minDist=d;
+                        nearest=c;
+                    }
+                }
+            }
+            if(nearest){
+                const dx=nearest.x-this.x;
+                const dy=nearest.y-this.y;
+                const dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist>0){
+                    this.x+=dx/dist*this.speed;
+                    this.y+=dy/dist*this.speed;
+                }
+            }
         }
         if(this.attackCooldown>0)this.attackCooldown--;
     }
@@ -160,7 +171,6 @@ canvas.addEventListener('click',(e)=>{
     const rect=canvas.getBoundingClientRect();
     const x=e.clientX-rect.left;
     const y=e.clientY-rect.top;
-    // Check selection
     let clicked=null;
     for(let i=circles.length-1;i>=0;i--){
         const c=circles[i];
@@ -172,31 +182,28 @@ canvas.addEventListener('click',(e)=>{
         }
     }
     if(clicked){
-        // Select this unit
+        // Select unit
         if(selectedCircle)selectedCircle.controlledByPlayer=false;
         selectedCircle=clicked;
         selectedCircle.controlledByPlayer=true;
-    }else if(selectedCircle){
+    }else if(selectedCircle && running){
         // Move selected
         selectedCircle.targetX=x;
         selectedCircle.targetY=y;
-    }else{
-        // Placement mode (before start)
-        if(!running){
-            spawnCircle(x,y,placingTeam);
-        }
+    }else if(!running){
+        // Placement mode
+        spawnCircle(x,y,placingTeam);
     }
 });
 
 function gameLoop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(running){
-        // Update units
         for(const c of circles)c.move();
-        // Collision & attack
+        // Attack collisions
         for(let i=0;i<circles.length;i++){
             for(let j=i+1;j<circles.length;j++){
-                if(circles[i].team!==circles[j].team&&circles[i].isColliding(circles[j])){
+                if(circles[i].team!==circles[j].team && circles[i].isColliding(circles[j])){
                     circles[i].attack(circles[j]);
                     circles[j].attack(circles[i]);
                 }
