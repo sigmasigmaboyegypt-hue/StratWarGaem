@@ -3,52 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Circle Battle Simulator - Modern Map</title>
+<title>Circle Battle Simulator - FINAL</title>
 <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Segoe UI',sans-serif; background:#121212; color:#fff; overflow:hidden; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',sans-serif; background:#121212; color:#fff; overflow:hidden; }
 
-    .header {
-        display:flex; justify-content:space-between; align-items:center;
-        padding:10px 20px; background:#1f1f1f;
-        box-shadow:0 4px 10px rgba(0,0,0,0.5);
-    }
-    .header h1 { color:#f1c40f; font-size:1.5rem; }
-    .header .buttons { display:flex; gap:10px; }
-    .header button {
-        border:none; padding:6px 14px; border-radius:5px;
-        font-weight:bold; cursor:pointer; transition:0.2s;
-    }
-    .red-btn{background:#e74c3c;} .blue-btn{background:#3498db;}
-    .delete-btn{background:#7f8c8d;} .start-btn{background:#2ecc71;}
-    .pause-btn{background:#e67e22;}
-    .header button:hover{filter:brightness(1.2);}
+.header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#1f1f1f; box-shadow:0 4px 10px rgba(0,0,0,0.5); }
+.header h1 { color:#f1c40f; font-size:1.5rem; }
+.header .buttons { display:flex; gap:10px; }
+.header button { border:none; padding:6px 14px; border-radius:5px; font-weight:bold; cursor:pointer; transition:0.2s; }
+.red-btn{background:#e74c3c;} .blue-btn{background:#3498db;} .delete-btn{background:#7f8c8d;} .start-btn{background:#2ecc71;} .pause-btn{background:#e67e22;}
+.header button:hover{filter:brightness(1.2);}
 
-    #placingNotification {
-        position:absolute; top:60px; left:50%; transform:translateX(-50%);
-        background:#333; padding:5px 12px; border-radius:5px;
-        font-weight:bold; color:#f1c40f;
-        box-shadow:0 2px 8px rgba(0,0,0,0.7);
-    }
+#placingNotification { position:absolute; top:60px; left:50%; transform:translateX(-50%); background:#333; padding:5px 12px; border-radius:5px; font-weight:bold; color:#f1c40f; box-shadow:0 2px 8px rgba(0,0,0,0.7); }
 
-    #gameCanvas {
-        display:block; margin:80px auto 0 auto;
-        background:linear-gradient(135deg,#1a1a1a,#2a2a2a);
-        border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.7);
-    }
+#gameCanvas { display:block; margin:80px auto 0 auto; background:linear-gradient(135deg,#1a1a1a,#2a2a2a); border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.7); }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Circle Battle Simulator</h1>
-    <div class="buttons">
-        <button class="red-btn" id="placeRed">Red</button>
-        <button class="blue-btn" id="placeBlue">Blue</button>
-        <button class="delete-btn" id="deleteTool">Delete</button>
-        <button class="start-btn" id="startBtn">Start</button>
-        <button class="pause-btn" id="pauseBtn">Pause</button>
-    </div>
+<h1>Circle Battle Simulator</h1>
+<div class="buttons">
+<button class="red-btn" id="placeRed">Red</button>
+<button class="blue-btn" id="placeBlue">Blue</button>
+<button class="delete-btn" id="deleteTool">Delete</button>
+<button class="start-btn" id="startBtn">Start</button>
+<button class="pause-btn" id="pauseBtn">Pause</button>
+</div>
 </div>
 
 <div id="placingNotification">Placing: Red</div>
@@ -62,96 +44,74 @@ const placingNotification = document.getElementById("placingNotification");
 let placingMode = "red";
 let gameRunning = false;
 let circles = [];
+let mouseX=0, mouseY=0, showGhost=true;
 
-// Ghost placement
-let mouseX = 0, mouseY = 0;
-let showGhost = true;
-
-canvas.addEventListener("mousemove", e => {
+canvas.addEventListener("mousemove", e=>{
     const rect = canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
 });
 
 class Circle {
-    constructor(x, y, team) {
-        this.x = x; this.y = y; this.team = team;
-        this.radius = 20; this.health = 100;
-        this.speed = team === "red" ? 1.8 : 2;
-        this.attackPower = team === "red" ? 10 : 12;
-        this.attackCooldown = 400; // ms
-        this.lastAttack = 0;
-
-        // Smart movement
-        this.velX = 0; this.velY = 0;
-        this.maxSpeed = 1.4; this.turnSpeed = 0.15;
+    constructor(x,y,team){
+        this.x=x; this.y=y; this.team=team; this.radius=20; this.health=100;
+        this.attackPower = team==='red'?10:12; this.attackCooldown=400; this.lastAttack=0;
+        this.velX=0; this.velY=0; this.maxSpeed=1.4; this.turnSpeed=0.15;
     }
 
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-        ctx.fillStyle = this.team === "red" ? "#e74c3c" : "#3498db";
+    draw(){
+        ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+        ctx.fillStyle = this.team==='red'?'#e74c3c':'#3498db';
         ctx.fill();
-
-        // Health bar
-        ctx.fillStyle = "#333";
-        ctx.fillRect(this.x-25, this.y-this.radius-15, 50, 8);
-        ctx.fillStyle = this.health > 60 ? "#2ecc71" : this.health > 30 ? "#f39c12" : "#e74c3c";
-        ctx.fillRect(this.x-25, this.y-this.radius-15, 50*(this.health/100), 8);
-        ctx.strokeStyle = "#fff"; ctx.strokeRect(this.x-25, this.y-this.radius-15, 50, 8);
+        ctx.fillStyle='#333'; ctx.fillRect(this.x-25,this.y-this.radius-15,50,8);
+        ctx.fillStyle=this.health>60?'#2ecc71':this.health>30?'#f39c12':'#e74c3c';
+        ctx.fillRect(this.x-25,this.y-this.radius-15,50*(this.health/100),8);
+        ctx.strokeStyle='#fff'; ctx.strokeRect(this.x-25,this.y-this.radius-15,50,8);
     }
 
-    distanceTo(other) { return Math.hypot(this.x-other.x, this.y-other.y); }
-
-    updateAI(enemies) {
-        if (!gameRunning) return;
-        if (enemies.length===0) return;
-        let target = enemies.reduce((a,b) => this.distanceTo(a)<this.distanceTo(b)?a:b);
-
-        let dx = target.x-this.x, dy = target.y-this.y;
-        let dist = Math.hypot(dx,dy);
-        let desiredX = dx/dist, desiredY = dy/dist;
-        let stopDist = this.radius + target.radius + 8;
-        let speed = this.maxSpeed * Math.min(1, dist/120);
-
-        if (dist>stopDist){
-            this.velX += (desiredX*speed - this.velX)*this.turnSpeed;
-            this.velY += (desiredY*speed - this.velY)*this.turnSpeed;
-            this.x += this.velX; this.y += this.velY;
-        } else {
-            this.velX *= 0.8; this.velY *= 0.8;
-        }
-
-        // Attack when close
-        this.attack(target);
-    }
-
-    attack(target){
-        let now = performance.now();
-        let dist = this.distanceTo(target);
-        if(dist <= this.radius + target.radius + 4){
-            if(now - this.lastAttack >= this.attackCooldown){
-                target.health -= this.attackPower;
-                this.lastAttack = now;
-            }
-        }
-    }
+    distanceTo(other){ return Math.hypot(this.x-other.x,this.y-other.y); }
 
     applySeparation(allies){
         let pushX=0, pushY=0;
         for(let other of allies){
             if(other===this) continue;
-            let dx = this.x-other.x, dy = this.y-other.y;
-            let dist = Math.hypot(dx,dy);
-            let minDist = this.radius*2 + 4;
+            let dx=this.x-other.x, dy=this.y-other.y;
+            let dist=Math.hypot(dx,dy);
+            let minDist=this.radius*2+6;
             if(dist<minDist && dist>0){
-                let force = (minDist-dist)/minDist;
-                pushX += dx/dist*force;
-                pushY += dy/dist*force;
+                let force=(minDist-dist)/minDist;
+                pushX += dx/dist*force*1.5;
+                pushY += dy/dist*force*1.5;
             }
         }
-        this.x += pushX*1.2;
-        this.y += pushY*1.2;
+        this.x += pushX; this.y += pushY;
+    }
+
+    updateAI(enemies){
+        if(!gameRunning || enemies.length===0) return;
+        let target = enemies.reduce((a,b)=>this.distanceTo(a)<this.distanceTo(b)?a:b);
+        let dx = target.x-this.x, dy=target.y-this.y, dist=Math.hypot(dx,dy);
+        let desiredX = dx/dist, desiredY=dy/dist;
+        let stopDist = this.radius + target.radius + 8;
+        let speed = this.maxSpeed * Math.min(1, dist/120);
+
+        if(dist>stopDist){
+            this.velX += (desiredX*speed - this.velX)*this.turnSpeed;
+            this.velY += (desiredY*speed - this.velY)*this.turnSpeed;
+            this.x += this.velX; this.y += this.velY;
+        } else { this.velX*=0.8; this.velY*=0.8; }
+
+        this.attack(target, dist, stopDist);
+    }
+
+    attack(target, dist, stopDist){
+        let now = performance.now();
+        if(dist > this.radius + 1 && dist <= stopDist){
+            if(now - this.lastAttack >= this.attackCooldown){
+                target.health -= this.attackPower;
+                this.lastAttack = now;
+            }
+        }
     }
 }
 
@@ -165,8 +125,7 @@ function drawMap(){
 }
 
 function drawGhost(){
-    if(!showGhost) return;
-    if(placingMode!=="red" && placingMode!=="blue") return;
+    if(!showGhost || (placingMode!=="red" && placingMode!=="blue")) return;
     let color = "rgba(255,255,255,0.45)";
     let blocked = circles.some(c=>Math.hypot(c.x-mouseX,c.y-mouseY)<c.radius*2);
     if(blocked) color="rgba(255,0,0,0.45)";
@@ -181,8 +140,8 @@ function gameLoop(){
     let blueTeam = circles.filter(c=>c.team==="blue");
 
     for(let c of circles){
-        c.updateAI(c.team==="red"?blueTeam:redTeam);
         c.applySeparation(c.team==="red"?redTeam:blueTeam);
+        c.updateAI(c.team==="red"?blueTeam:redTeam);
         c.draw();
     }
 
@@ -192,9 +151,9 @@ function gameLoop(){
 
 canvas.addEventListener("click", e=>{
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
 
-    if(placingMode==="red" || placingMode==="blue"){
+    if(placingMode==="red"||placingMode==="blue"){
         let blocked = circles.some(c=>Math.hypot(c.x-x,c.y-y)<c.radius*2);
         if(!blocked) circles.push(new Circle(x,y,placingMode));
     } else if(placingMode==="delete"){
