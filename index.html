@@ -55,13 +55,14 @@
         .start-btn{ background: linear-gradient(to bottom, #2ecc71, #27ae60); color: white; } 
         .pause-btn{ background: linear-gradient(to bottom, #e67e22, #d35400); color: white; }
         .special-btn{ background: linear-gradient(to bottom, #9b59b6, #8e44ad); color: white; }
+        .auto-btn{ background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white; }
         .header button:hover{ transform: translateY(-2px); box-shadow: 0 6px 8px rgba(0,0,0,0.3); }
         .header button:active{ transform: translateY(0); }
         .header button:disabled{ opacity: 0.6; cursor: not-allowed; transform: none; }
 
         #placingNotification { 
             position: absolute; 
-            top: 90px; 
+            top: 100px; 
             left: 50%; 
             transform: translateX(-50%); 
             background: rgba(40, 40, 60, 0.95); 
@@ -70,12 +71,13 @@
             font-weight: bold; 
             color: #f1c40f; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            z-index: 10;
+            z-index: 100;
             border: 1px solid rgba(241, 196, 15, 0.3);
             backdrop-filter: blur(5px);
             font-size: 1.1rem;
             min-width: 200px;
             text-align: center;
+            pointer-events: none;
         }
 
         .stats-container {
@@ -123,6 +125,7 @@
             border-radius:12px; 
             box-shadow:0 0 30px rgba(0,0,0,0.8);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
 
         /* Victory Modal */
@@ -260,6 +263,17 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
+        
+        .team-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #f1c40f;
+        }
     </style>
 </head>
 <body>
@@ -268,17 +282,16 @@
         <div class="buttons">
             <button class="red-btn" id="placeRed">Red Soldier</button>
             <button class="blue-btn" id="placeBlue">Blue Soldier</button>
-            <button class="special-btn" id="placeRedTank">Red Tank</button>
-            <button class="special-btn" id="placeBlueTank">Blue Tank</button>
+            <button class="special-btn" id="placeTank">Tank</button>
             <button class="special-btn" id="placeHealer">Healer</button>
             <button class="delete-btn" id="deleteTool">Delete</button>
             <button class="start-btn" id="startBtn">Start Battle</button>
             <button class="pause-btn" id="pauseBtn">Pause</button>
-            <button class="special-btn" id="autoPlaceBtn">Auto Place</button>
+            <button class="auto-btn" id="autoPlaceBtn">Auto Place</button>
         </div>
     </div>
 
-    <div id="placingNotification">Placing: Red Soldier</div>
+    <div id="placingNotification">Placing: Auto (Left=Red, Right=Blue)</div>
 
     <div class="stats-container">
         <div class="stats-panel">
@@ -324,8 +337,8 @@
     <canvas id="gameCanvas" width="1000" height="600"></canvas>
     
     <div class="instructions">
-        <p><strong>Instructions:</strong> Place different unit types on the battlefield, then click "Start Battle" to begin the simulation.</p>
-        <p>Use the Delete tool to remove circles. The battle ends when one team is completely eliminated.</p>
+        <p><strong>Instructions:</strong> Place units on the battlefield - units placed on the LEFT side become RED, units on the RIGHT side become BLUE.</p>
+        <p>Use the Delete tool to remove units. Click "Start Battle" to begin the simulation. The battle ends when one team is completely eliminated.</p>
     </div>
 
     <script>
@@ -344,7 +357,7 @@
         const finalTimeEl = document.getElementById("finalTime");
         const remainingUnitsEl = document.getElementById("remainingUnits");
 
-        let placingMode = "red";
+        let placingMode = "auto";
         let gameRunning = false;
         let circles = []; // Start with empty array - no pre-placed units
         let mouseX = 0, mouseY = 0, showGhost = true;
@@ -664,34 +677,53 @@
                 ctx.stroke();
             }
             
-            // Draw team zones
-            ctx.fillStyle = 'rgba(231, 76, 60, 0.08)';
-            ctx.fillRect(0, 0, 100, canvas.height);
-            ctx.fillStyle = 'rgba(52, 152, 219, 0.08)';
-            ctx.fillRect(canvas.width - 100, 0, 100, canvas.height);
+            // Draw team zones with more visible colors
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.15)';
+            ctx.fillRect(0, 0, canvas.width/2, canvas.height);
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.15)';
+            ctx.fillRect(canvas.width/2, 0, canvas.width/2, canvas.height);
             
             // Draw center line
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.setLineDash([10, 10]);
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 0);
             ctx.lineTo(canvas.width / 2, canvas.height);
             ctx.stroke();
             ctx.setLineDash([]);
+            
+            // Draw team labels
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.7)';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('RED TEAM', canvas.width/4, 30);
+            
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
+            ctx.fillText('BLUE TEAM', canvas.width*3/4, 30);
         }
 
         function drawGhost() {
-            if (!showGhost || (placingMode !== "red" && placingMode !== "blue" && 
-                placingMode !== "redTank" && placingMode !== "blueTank" && placingMode !== "healer")) return;
+            if (!showGhost || placingMode === "delete") return;
             
             let color, radius = baseUnitSize;
-            if (placingMode === "red" || placingMode === "redTank") {
+            let team = "auto";
+            
+            // Determine team based on mouse position
+            if (placingMode === "auto") {
+                team = mouseX < canvas.width/2 ? "red" : "blue";
+                color = team === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(52, 152, 219, 0.5)";
+            } else if (placingMode === "red") {
+                team = "red";
                 color = "rgba(231, 76, 60, 0.5)";
-                if (placingMode === "redTank") radius = baseUnitSize * 1.3;
-            } else if (placingMode === "blue" || placingMode === "blueTank") {
+            } else if (placingMode === "blue") {
+                team = "blue";
                 color = "rgba(52, 152, 219, 0.5)";
-                if (placingMode === "blueTank") radius = baseUnitSize * 1.3;
+            } else if (placingMode === "tank") {
+                team = mouseX < canvas.width/2 ? "red" : "blue";
+                color = team === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(52, 152, 219, 0.5)";
+                radius = baseUnitSize * 1.3;
             } else if (placingMode === "healer") {
+                team = mouseX < canvas.width/2 ? "red" : "blue";
                 color = "rgba(155, 89, 182, 0.5)";
             }
                 
@@ -760,8 +792,8 @@
             updateStats();
             
             // Reset placing mode to default
-            placingMode = "red";
-            placingNotification.textContent = "Placing: Red Soldier";
+            placingMode = "auto";
+            placingNotification.textContent = "Placing: Auto (Left=Red, Right=Blue)";
         }
 
         function closeModal() {
@@ -832,19 +864,28 @@
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left, y = e.clientY - rect.top;
 
-            if (placingMode === "red" || placingMode === "blue" || 
-                placingMode === "redTank" || placingMode === "blueTank" || placingMode === "healer") {
+            if (placingMode === "auto" || placingMode === "red" || placingMode === "blue" || 
+                placingMode === "tank" || placingMode === "healer") {
                 
                 let type = 'soldier';
                 let team = 'red';
                 
-                if (placingMode === "red") { team = 'red'; type = 'soldier'; }
-                else if (placingMode === "blue") { team = 'blue'; type = 'soldier'; }
-                else if (placingMode === "redTank") { team = 'red'; type = 'tank'; }
-                else if (placingMode === "blueTank") { team = 'blue'; type = 'tank'; }
-                else if (placingMode === "healer") { 
-                    team = Math.random() > 0.5 ? 'red' : 'blue'; 
-                    type = 'healer'; 
+                // Determine team based on mode and position
+                if (placingMode === "auto") {
+                    team = x < canvas.width/2 ? 'red' : 'blue';
+                    type = 'soldier';
+                } else if (placingMode === "red") {
+                    team = 'red';
+                    type = 'soldier';
+                } else if (placingMode === "blue") {
+                    team = 'blue';
+                    type = 'soldier';
+                } else if (placingMode === "tank") {
+                    team = x < canvas.width/2 ? 'red' : 'blue';
+                    type = 'tank';
+                } else if (placingMode === "healer") {
+                    team = x < canvas.width/2 ? 'red' : 'blue';
+                    type = 'healer';
                 }
                 
                 let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < c.radius * 2);
@@ -869,21 +910,15 @@
             showGhost = true;
         };
         
-        document.getElementById("placeRedTank").onclick = () => {
-            placingMode = "redTank";
-            placingNotification.textContent = "Placing: Red Tank";
-            showGhost = true;
-        };
-        
-        document.getElementById("placeBlueTank").onclick = () => {
-            placingMode = "blueTank";
-            placingNotification.textContent = "Placing: Blue Tank";
+        document.getElementById("placeTank").onclick = () => {
+            placingMode = "tank";
+            placingNotification.textContent = "Placing: Tank (Auto Team)";
             showGhost = true;
         };
         
         document.getElementById("placeHealer").onclick = () => {
             placingMode = "healer";
-            placingNotification.textContent = "Placing: Healer (Random Team)";
+            placingNotification.textContent = "Placing: Healer (Auto Team)";
             showGhost = true;
         };
         
