@@ -12,9 +12,9 @@
         }
         
         body { 
-            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #36393f, #2f3136);
-            color: #dcddde;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -22,122 +22,128 @@
             padding: 0;
         }
 
-        /* Discord-style Header */
+        /* Modern Header */
         .header { 
-            background: #2f3136;
-            border-bottom: 1px solid #202225;
-            padding: 16px 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            border-bottom: 1px solid #333;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            z-index: 100;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 60px;
         }
 
         .header h1 { 
             color: #fff;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            white-space: nowrap;
         }
 
         .header h1::before {
             content: "⚔️";
-            font-size: 1.6rem;
+            font-size: 1.4rem;
         }
 
         .button-groups {
             display: flex;
-            gap: 12px;
-            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .button-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
-        /* Modern Discord-style Buttons */
+        /* Modern Buttons */
         .header button { 
-            background: #4f545c;
+            background: #404040;
             border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-weight: 500;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #fff;
-            min-width: 80px;
+            min-width: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            touch-action: manipulation;
         }
 
         .header button:hover { 
-            background: #5d6269;
+            background: #4a4a4a;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
         }
 
         .header button:active {
             transform: translateY(0);
         }
 
-        .soldier-btn{ background: #43b581; }
-        .soldier-btn:hover{ background: #4bc389; }
-        .special-btn{ background: #5865f2; }
-        .special-btn:hover{ background: #6774f3; }
-        .delete-btn{ background: #ed4245; }
-        .delete-btn:hover{ background: #f04749; }
-        .start-btn{ background: #43b581; }
-        .start-btn:hover{ background: #4bc389; }
-        .pause-btn{ background: #faa61a; }
-        .pause-btn:hover{ background: #fbb044; }
-        .auto-btn{ background: #5865f2; }
-        .auto-btn:hover{ background: #6774f3; }
+        .soldier-btn{ background: #e74c3c; }
+        .soldier-btn:hover{ background: #ec7063; }
+        .special-btn{ background: #3498db; }
+        .special-btn:hover{ background: #5dade2; }
+        .delete-btn{ background: #e67e22; }
+        .delete-btn:hover{ background: #eb984e; }
+        .start-btn{ background: #27ae60; }
+        .start-btn:hover{ background: #2ecc71; }
+        .pause-btn{ background: #f39c12; }
+        .pause-btn:hover{ background: #f4d03f; }
+        .auto-btn{ background: #9b59b6; }
+        .auto-btn:hover{ background: #af7ac5; }
 
         .main-container {
             display: flex;
             flex: 1;
             min-height: 0;
-            background: #36393f;
+            background: #1a1a1a;
+            flex-direction: column;
         }
 
-        /* Discord-style Sidebar */
+        /* Mobile-first Sidebar */
         .sidebar {
-            width: 240px;
-            background: #2f3136;
-            border-right: 1px solid #202225;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #333;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            order: 2;
         }
 
         .sidebar-section {
-            background: #40444b;
+            background: #363636;
             border-radius: 8px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .sidebar-section h3 {
             color: #fff;
-            font-size: 1.1rem;
-            margin-bottom: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .sidebar-section h3::before {
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
 
         .stats-title::before { content: "📊"; }
@@ -147,9 +153,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #40444b;
-            font-size: 0.9rem;
+            padding: 6px 0;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #404040;
         }
 
         .stat-row:last-child {
@@ -157,33 +163,35 @@
         }
 
         .red-stat { 
-            color: #ed4245; 
+            color: #e74c3c; 
             font-weight: 600;
         }
         .blue-stat { 
-            color: #5865f2; 
+            color: #3498db; 
             font-weight: 600;
         }
         .green-stat { 
-            color: #43b581; 
+            color: #27ae60; 
             font-weight: 600;
         }
 
         .control-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            font-size: 0.9rem;
+            gap: 8px;
+            padding: 5px 0;
+            font-size: 0.8rem;
         }
 
         .control-item .key {
-            background: #36393f;
-            padding: 4px 8px;
+            background: #404040;
+            padding: 3px 6px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            color: #b9bbbe;
+            color: #ccc;
+            min-width: 40px;
+            text-align: center;
         }
 
         .game-area {
@@ -191,20 +199,21 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
-            padding: 20px;
-            background: #36393f;
-            position: relative;
+            padding: 12px;
+            background: #1a1a1a;
+            order: 1;
         }
 
         #gameCanvas { 
             flex: 1;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid #40444b;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
             width: 100%;
             height: 100%;
-            min-height: 400px;
+            min-height: 300px;
+            touch-action: none;
         }
 
         /* Modern Notification */
@@ -212,17 +221,17 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 14px 20px;
-            background: #43b581;
+            padding: 12px 16px;
+            background: #27ae60;
             color: white;
             border-radius: 8px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             z-index: 1500;
             transform: translateX(400px);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 320px;
+            transition: transform 0.3s ease;
+            max-width: 280px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             border-left: 4px solid rgba(255, 255, 255, 0.3);
         }
 
@@ -231,15 +240,15 @@
         }
 
         .notification.error {
-            background: #ed4245;
+            background: #e74c3c;
         }
 
         .notification.warning {
-            background: #faa61a;
+            background: #f39c12;
         }
 
         .notification.info {
-            background: #5865f2;
+            background: #3498db;
         }
 
         /* Modern Modal */
@@ -250,63 +259,64 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 2000;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(5px);
+            padding: 20px;
         }
         
         .modal-content {
-            background: #36393f;
-            padding: 30px;
+            background: #2d2d2d;
+            padding: 24px;
             border-radius: 12px;
             text-align: center;
-            width: 90%;
-            max-width: 450px;
-            border: 1px solid #40444b;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #404040;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
         
         .modal h2 { 
-            font-size: 2rem; 
-            margin-bottom: 20px; 
+            font-size: 1.8rem; 
+            margin-bottom: 16px; 
             color: #fff;
             font-weight: 700;
         }
         
         .winner-text {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: bold;
-            margin: 20px 0;
-            padding: 16px;
+            margin: 16px 0;
+            padding: 14px;
             border-radius: 8px;
-            background: #40444b;
+            background: #363636;
             border: 2px solid;
         }
         
         .winner-red { 
-            color: #ed4245; 
-            border-color: #ed4245;
+            color: #e74c3c; 
+            border-color: #e74c3c;
         }
         
         .winner-blue { 
-            color: #5865f2; 
-            border-color: #5865f2;
+            color: #3498db; 
+            border-color: #3498db;
         }
         
         .modal-buttons {
             display: flex;
-            gap: 12px;
-            margin-top: 24px;
+            gap: 10px;
+            margin-top: 20px;
         }
         
         .modal-btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border: none;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s ease;
             flex: 1;
@@ -314,20 +324,20 @@
         }
         
         .play-again-btn {
-            background: #43b581;
+            background: #27ae60;
         }
         
         .play-again-btn:hover {
-            background: #4bc389;
+            background: #2ecc71;
             transform: translateY(-2px);
         }
         
         .close-modal-btn {
-            background: #4f545c;
+            background: #7f8c8d;
         }
         
         .close-modal-btn:hover {
-            background: #5d6269;
+            background: #95a5a6;
             transform: translateY(-2px);
         }
 
@@ -336,68 +346,134 @@
             position: absolute;
             font-weight: 700;
             pointer-events: none;
-            animation: floatUp 1.2s ease-out forwards;
-            font-size: 16px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            animation: floatUp 1s ease-out forwards;
+            font-size: 14px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
 
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-20px) scale(1.1); opacity: 0.8; }
-            100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+            50% { transform: translateY(-15px) scale(1.1); opacity: 0.8; }
+            100% { transform: translateY(-30px) scale(1.2); opacity: 0; }
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 12px;
-                padding: 12px;
-            }
-            
-            .button-groups {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .button-row {
-                justify-content: center;
-                width: 100%;
-            }
-            
-            .header button {
-                flex: 1;
+        /* Desktop Layout */
+        @media (min-width: 768px) {
+            .main-container {
+                flex-direction: row;
             }
             
             .sidebar {
-                width: 200px;
-            }
-            
-            .main-container {
+                width: 280px;
+                border-bottom: none;
+                border-right: 1px solid #333;
+                display: flex;
                 flex-direction: column;
+                gap: 16px;
+                padding: 16px;
+                order: 1;
             }
             
             .game-area {
-                padding: 12px;
+                order: 2;
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header button {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+                min-width: 80px;
+            }
+            
+            .sidebar-section {
+                padding: 16px;
+            }
+            
+            .sidebar-section h3 {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+            
+            .stat-row {
+                font-size: 0.85rem;
+                padding: 8px 0;
+            }
+            
+            .control-item {
+                font-size: 0.85rem;
+                padding: 6px 0;
             }
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* Large Desktop */
+        @media (min-width: 1200px) {
+            .sidebar {
+                width: 320px;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
         }
 
-        ::-webkit-scrollbar-track {
-            background: #2f3136;
+        /* Mobile Landscape */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 8px 12px;
+                min-height: 50px;
+            }
+            
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .header button {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+                min-width: 60px;
+            }
+            
+            .sidebar {
+                padding: 8px;
+                gap: 8px;
+            }
+            
+            .sidebar-section {
+                padding: 8px;
+            }
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #40444b;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4f545c;
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .header button {
+                padding: 14px 16px;
+                min-width: 80px;
+            }
+            
+            .header button:hover {
+                transform: none;
+                background: inherit;
+            }
+            
+            .header button:active {
+                background: #4a4a4a;
+                transform: scale(0.98);
+            }
+            
+            .soldier-btn:active{ background: #ec7063; }
+            .special-btn:active{ background: #5dade2; }
+            .delete-btn:active{ background: #eb984e; }
+            .start-btn:active{ background: #2ecc71; }
+            .pause-btn:active{ background: #f4d03f; }
+            .auto-btn:active{ background: #af7ac5; }
         }
     </style>
 </head>
@@ -426,19 +502,19 @@
             <div class="sidebar-section">
                 <h3 class="stats-title">Battle Statistics</h3>
                 <div class="stat-row">
-                    <span>🔴 Red Units:</span>
+                    <span>🔴 Red:</span>
                     <span class="red-stat" id="redCount">0</span>
                 </div>
                 <div class="stat-row">
-                    <span>🔵 Blue Units:</span>
+                    <span>🔵 Blue:</span>
                     <span class="blue-stat" id="blueCount">0</span>
                 </div>
                 <div class="stat-row">
-                    <span>Total Units:</span>
+                    <span>Total:</span>
                     <span id="totalCount">0</span>
                 </div>
                 <div class="stat-row">
-                    <span>⏱️ Battle Time:</span>
+                    <span>⏱️ Time:</span>
                     <span class="green-stat" id="battleTime">0s</span>
                 </div>
                 <div class="stat-row">
@@ -450,8 +526,8 @@
             <div class="sidebar-section">
                 <h3 class="controls-title">Quick Controls</h3>
                 <div class="control-item">
-                    <span class="key">Click</span>
-                    <span>Place/Select Unit</span>
+                    <span class="key">Tap</span>
+                    <span>Place Unit</span>
                 </div>
                 <div class="control-item">
                     <span class="key">Delete</span>
@@ -462,8 +538,6 @@
                     <span>Begin Battle</span>
                 </div>
             </div>
-
-            <!-- Damage System section has been removed -->
         </div>
 
         <div class="game-area">
@@ -475,7 +549,7 @@
         <div class="modal-content">
             <h2>🏆 Victory!</h2>
             <div id="winnerText" class="winner-text">Red Team Victory!</div>
-            <div id="battleStats" style="margin: 20px 0; font-size: 1.1rem; color: #b9bbbe;">
+            <div id="battleStats" style="margin: 16px 0; font-size: 1rem; color: #ccc;">
                 ⏱️ Battle lasted: <span id="finalTime">0</span> seconds<br>
                 👥 Remaining units: <span id="remainingUnits">0</span>
             </div>
@@ -505,8 +579,19 @@
         // Set canvas size to fit available space
         function resizeCanvas() {
             const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            const header = document.querySelector('.header');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (window.innerWidth >= 768) {
+                // Desktop layout
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            } else {
+                // Mobile layout
+                const availableHeight = window.innerHeight - header.offsetHeight - sidebar.offsetHeight;
+                canvas.width = container.clientWidth;
+                canvas.height = Math.max(300, availableHeight);
+            }
         }
 
         let placingMode = "soldier";
@@ -521,7 +606,9 @@
         let battleDuration = 0;
 
         // Map boundaries
-        const mapPadding = 30;
+        const mapPadding = 20;
+        // Close combat range - units must be very close to attack
+        const COMBAT_RANGE = 35;
 
         // Initialize canvas size
         resizeCanvas();
@@ -544,10 +631,10 @@
             
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, 2500);
         }
 
-        // Enhanced map drawing with Discord theme
+        // Enhanced map drawing
         function drawMap() {
             // Clear with gradient background
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -556,132 +643,48 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw subtle grid
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-            ctx.lineWidth = 1;
-            const gridSize = 50;
-            for (let x = 0; x <= canvas.width; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = 0; y <= canvas.height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            
-            // Draw team zones with correct sides (Red Left, Blue Right)
+            // Draw team zones
             const redGradient = ctx.createLinearGradient(0, 0, canvas.width/2, 0);
-            redGradient.addColorStop(0, 'rgba(237, 66, 69, 0.15)');
-            redGradient.addColorStop(1, 'rgba(237, 66, 69, 0.05)');
+            redGradient.addColorStop(0, 'rgba(231, 76, 60, 0.1)');
+            redGradient.addColorStop(1, 'rgba(231, 76, 60, 0.05)');
             ctx.fillStyle = redGradient;
             ctx.fillRect(0, 0, canvas.width/2, canvas.height);
             
             const blueGradient = ctx.createLinearGradient(canvas.width, 0, canvas.width/2, 0);
-            blueGradient.addColorStop(0, 'rgba(88, 101, 242, 0.15)');
-            blueGradient.addColorStop(1, 'rgba(88, 101, 242, 0.05)');
+            blueGradient.addColorStop(0, 'rgba(52, 152, 219, 0.1)');
+            blueGradient.addColorStop(1, 'rgba(52, 152, 219, 0.05)');
             ctx.fillStyle = blueGradient;
             ctx.fillRect(canvas.width/2, 0, canvas.width/2, canvas.height);
             
-            // Draw center line with glow effect
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([15, 10]);
+            // Draw center line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 8]);
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 0);
             ctx.lineTo(canvas.width / 2, canvas.height);
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Add center glow
-            const centerGradient = ctx.createRadialGradient(
-                canvas.width/2, canvas.height/2, 0,
-                canvas.width/2, canvas.height/2, 200
-            );
-            centerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-            centerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = centerGradient;
-            ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
-            
-            // Draw team labels (Simple names)
-            ctx.fillStyle = 'rgba(237, 66, 69, 0.8)';
-            ctx.font = 'bold 24px "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif';
+            // Draw team labels
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
+            ctx.font = 'bold 18px "Segoe UI", system-ui';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('🔴 RED', canvas.width/4, 40);
+            ctx.fillText('🔴 RED', canvas.width/4, 25);
             
-            ctx.fillStyle = 'rgba(88, 101, 242, 0.8)';
-            ctx.fillText('🔵 BLUE', canvas.width*3/4, 40);
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.8)';
+            ctx.fillText('🔵 BLUE', canvas.width*3/4, 25);
             
-            // Draw map boundaries (barriers)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([5, 5]);
-            
-            // Top barrier
-            ctx.beginPath();
-            ctx.moveTo(mapPadding, mapPadding);
-            ctx.lineTo(canvas.width - mapPadding, mapPadding);
-            ctx.stroke();
-            
-            // Bottom barrier
-            ctx.beginPath();
-            ctx.moveTo(mapPadding, canvas.height - mapPadding);
-            ctx.lineTo(canvas.width - mapPadding, canvas.height - mapPadding);
-            ctx.stroke();
-            
-            // Left barrier
-            ctx.beginPath();
-            ctx.moveTo(mapPadding, mapPadding);
-            ctx.lineTo(mapPadding, canvas.height - mapPadding);
-            ctx.stroke();
-            
-            // Right barrier
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - mapPadding, mapPadding);
-            ctx.lineTo(canvas.width - mapPadding, canvas.height - mapPadding);
-            ctx.stroke();
-            
-            ctx.setLineDash([]);
-            
-            // Draw decorative corner elements
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            // Draw map boundaries
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
             
-            // Top-left corner
             ctx.beginPath();
-            ctx.moveTo(mapPadding + 10, mapPadding + 10);
-            ctx.lineTo(mapPadding + 50, mapPadding + 10);
-            ctx.moveTo(mapPadding + 10, mapPadding + 10);
-            ctx.lineTo(mapPadding + 10, mapPadding + 50);
+            ctx.rect(mapPadding, mapPadding, canvas.width - mapPadding*2, canvas.height - mapPadding*2);
             ctx.stroke();
-            
-            // Top-right corner
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - mapPadding - 10, mapPadding + 10);
-            ctx.lineTo(canvas.width - mapPadding - 50, mapPadding + 10);
-            ctx.moveTo(canvas.width - mapPadding - 10, mapPadding + 10);
-            ctx.lineTo(canvas.width - mapPadding - 10, mapPadding + 50);
-            ctx.stroke();
-            
-            // Bottom-left corner
-            ctx.beginPath();
-            ctx.moveTo(mapPadding + 10, canvas.height - mapPadding - 10);
-            ctx.lineTo(mapPadding + 50, canvas.height - mapPadding - 10);
-            ctx.moveTo(mapPadding + 10, canvas.height - mapPadding - 10);
-            ctx.lineTo(mapPadding + 10, canvas.height - mapPadding - 50);
-            ctx.stroke();
-            
-            // Bottom-right corner
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 10);
-            ctx.lineTo(canvas.width - mapPadding - 50, canvas.height - mapPadding - 10);
-            ctx.moveTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 10);
-            ctx.lineTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 50);
-            ctx.stroke();
+            ctx.setLineDash([]);
         }
 
         function drawGhost() {
@@ -693,17 +696,17 @@
             
             if (placingMode === "soldier") {
                 type = "soldier";
-                color = team === "red" ? "rgba(237, 66, 69, 0.6)" : "rgba(88, 101, 242, 0.6)";
+                color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)";
             } else if (placingMode === "tank") {
                 type = "tank";
-                color = team === "red" ? "rgba(237, 66, 69, 0.6)" : "rgba(88, 101, 242, 0.6)";
+                color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)";
                 radius = baseUnitSize * 1.3 * (Math.min(canvas.width, canvas.height) / 800);
             } else if (placingMode === "healer") {
                 type = "healer";
                 color = "rgba(155, 89, 182, 0.6)";
             }
                 
-            // Check if position is valid (within boundaries and not blocked)
+            // Check if position is valid
             const withinBounds = mouseX > mapPadding + radius && 
                                mouseX < canvas.width - mapPadding - radius &&
                                mouseY > mapPadding + radius && 
@@ -712,22 +715,13 @@
             let blocked = circles.some(c => Math.hypot(c.x - mouseX, c.y - mouseY) < (c.radius + radius) * 0.8);
             
             if (blocked || !withinBounds) {
-                color = "rgba(237, 66, 69, 0.8)";
+                color = "rgba(231, 76, 60, 0.8)";
             }
             
             ctx.beginPath();
             ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
             ctx.fillStyle = color;
             ctx.fill();
-            
-            // Add pulsing outline
-            ctx.strokeStyle = color.replace('0.6', '0.9').replace('0.8', '1');
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.arc(mouseX, mouseY, radius + 2, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
         }
 
         // Get directional damage multiplier
@@ -735,27 +729,20 @@
             const dx = target.x - attacker.x;
             const dy = target.y - attacker.y;
             
-            // Calculate angle between attacker and target
             const attackAngle = Math.atan2(dy, dx);
-            
-            // Calculate target's facing angle (where they're moving/looking)
             const targetAngle = Math.atan2(target.velY, target.velX);
             
-            // Calculate angle difference
             let angleDiff = attackAngle - targetAngle;
-            
-            // Normalize angle to [-PI, PI]
             while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
             while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
             
             const absAngleDiff = Math.abs(angleDiff);
             
-            // Determine damage multiplier based on hit location
-            if (absAngleDiff < Math.PI / 6) { // Front (30 degrees)
+            if (absAngleDiff < Math.PI / 6) {
                 return 1.0;
-            } else if (absAngleDiff > (5 * Math.PI) / 6) { // Back (150-180 degrees)
+            } else if (absAngleDiff > (5 * Math.PI) / 6) {
                 return 2.0;
-            } else { // Sides
+            } else {
                 return 1.25;
             }
         }
@@ -778,15 +765,15 @@
             }
             
             draw() {
-                ctx.font = this.isCritical ? 'bold 18px Arial' : 'bold 14px Arial';
+                ctx.font = this.isCritical ? 'bold 16px Arial' : 'bold 13px Arial';
                 let color;
                 
                 if (this.isHeal) {
-                    color = `rgba(67, 181, 129, ${this.life})`; // Green
+                    color = `rgba(46, 204, 113, ${this.life})`;
                 } else if (this.isCritical) {
-                    color = `rgba(237, 66, 69, ${this.life})`; // Bright red for crits
+                    color = `rgba(231, 76, 60, ${this.life})`;
                 } else {
-                    color = `rgba(245, 125, 128, ${this.life})`; // Normal red
+                    color = `rgba(245, 125, 128, ${this.life})`;
                 }
                 
                 ctx.fillStyle = color;
@@ -801,9 +788,9 @@
                 this.y = y;
                 this.team = team;
                 this.isCritical = isCritical;
-                this.radius = isCritical ? 8 : 5;
-                this.maxRadius = isCritical ? 30 : 20;
-                this.duration = isCritical ? 400 : 300;
+                this.radius = isCritical ? 6 : 4;
+                this.maxRadius = isCritical ? 20 : 15;
+                this.duration = isCritical ? 300 : 200;
                 this.startTime = performance.now();
             }
             
@@ -820,16 +807,15 @@
                 
                 if (this.isCritical) {
                     ctx.fillStyle = this.team === 'red' 
-                        ? `rgba(237, 66, 69, ${alpha})` 
-                        : `rgba(88, 101, 242, ${alpha})`;
-                } else {
-                    ctx.fillStyle = this.team === 'red' 
                         ? `rgba(231, 76, 60, ${alpha})` 
                         : `rgba(52, 152, 219, ${alpha})`;
+                } else {
+                    ctx.fillStyle = this.team === 'red' 
+                        ? `rgba(192, 57, 43, ${alpha})` 
+                        : `rgba(41, 128, 185, ${alpha})`;
                 }
                 
                 ctx.fill();
-                
                 return true;
             }
         }
@@ -841,7 +827,6 @@
                 this.team = team;
                 this.type = type;
                 
-                // Adjust size based on canvas size
                 const sizeMultiplier = Math.min(canvas.width, canvas.height) / 800;
                 
                 if (type === 'soldier') {
@@ -849,26 +834,27 @@
                     this.health = 100;
                     this.maxHealth = 100;
                     this.attackPower = team === 'red' ? 10 : 12;
-                    this.attackCooldown = 400;
-                    this.maxSpeed = 1.4 * sizeMultiplier;
-                    this.turnSpeed = 0.15;
+                    this.attackCooldown = 600;
+                    this.maxSpeed = 1.2 * sizeMultiplier;
+                    this.turnSpeed = 0.12;
                 } else if (type === 'tank') {
-                    this.radius = baseUnitSize * 1.3 * sizeMultiplier;
+                    this.radius = baseUnitSize * 1.4 * sizeMultiplier;
                     this.health = 200;
                     this.maxHealth = 200;
-                    this.attackPower = team === 'red' ? 15 : 18;
-                    this.attackCooldown = 600;
-                    this.maxSpeed = 0.8 * sizeMultiplier;
-                    this.turnSpeed = 0.1;
+                    this.attackPower = team === 'red' ? 18 : 20;
+                    this.attackCooldown = 800;
+                    this.maxSpeed = 0.6 * sizeMultiplier;
+                    this.turnSpeed = 0.08;
                 } else if (type === 'healer') {
                     this.radius = baseUnitSize * sizeMultiplier;
                     this.health = 80;
                     this.maxHealth = 80;
                     this.attackPower = 0;
-                    this.healPower = 5;
-                    this.healCooldown = 500;
-                    this.maxSpeed = 1.0 * sizeMultiplier;
-                    this.turnSpeed = 0.12;
+                    this.healPower = 8;
+                    this.healCooldown = 400;
+                    this.maxSpeed = 0.9 * sizeMultiplier;
+                    this.turnSpeed = 0.1;
+                    this.healRange = 60;
                 }
                 
                 this.lastAttack = 0;
@@ -880,38 +866,36 @@
             }
 
             draw() {
-                // Update facing angle based on movement
                 if (Math.abs(this.velX) > 0.1 || Math.abs(this.velY) > 0.1) {
                     this.facingAngle = Math.atan2(this.velY, this.velX);
                 }
                 
-                // Draw circle with Discord-style colors
                 const gradient = ctx.createRadialGradient(
-                    this.x - 5, this.y - 5, 5,
+                    this.x - 3, this.y - 3, 3,
                     this.x, this.y, this.radius
                 );
                 
                 if (this.team === 'red') {
                     if (this.type === 'tank') {
-                        gradient.addColorStop(0, '#ff8a8a');
-                        gradient.addColorStop(1, '#a83232');
+                        gradient.addColorStop(0, '#ff7979');
+                        gradient.addColorStop(1, '#c0392b');
                     } else if (this.type === 'healer') {
-                        gradient.addColorStop(0, '#ff9ff3');
-                        gradient.addColorStop(1, '#cc5aa0');
+                        gradient.addColorStop(0, '#f8c471');
+                        gradient.addColorStop(1, '#e67e22');
                     } else {
                         gradient.addColorStop(0, '#ff6b6b');
-                        gradient.addColorStop(1, '#c0392b');
+                        gradient.addColorStop(1, '#e74c3c');
                     }
                 } else {
                     if (this.type === 'tank') {
-                        gradient.addColorStop(0, '#89c4f4');
-                        gradient.addColorStop(1, '#2c3e8f');
+                        gradient.addColorStop(0, '#7ed6df');
+                        gradient.addColorStop(1, '#2980b9');
                     } else if (this.type === 'healer') {
                         gradient.addColorStop(0, '#81ecec');
-                        gradient.addColorStop(1, '#00a8a8');
+                        gradient.addColorStop(1, '#00cec9');
                     } else {
                         gradient.addColorStop(0, '#74b9ff');
-                        gradient.addColorStop(1, '#2980b9');
+                        gradient.addColorStop(1, '#3498db');
                     }
                 }
                 
@@ -920,33 +904,19 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                // Draw facing direction indicator
-                ctx.strokeStyle = this.team === 'red' ? '#ed4245' : '#5865f2';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(
-                    this.x + Math.cos(this.facingAngle) * this.radius * 0.8,
-                    this.y + Math.sin(this.facingAngle) * this.radius * 0.8
-                );
-                ctx.stroke();
-                
                 // Health bar
-                const barWidth = this.radius * 2.5;
+                const barWidth = this.radius * 2;
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth, 6);
+                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth, 4);
                 
                 let healthColor;
                 const healthPercent = this.health / this.maxHealth;
-                if (healthPercent > 0.6) healthColor = '#43b581';
-                else if (healthPercent > 0.3) healthColor = '#faa61a';
-                else healthColor = '#ed4245';
+                if (healthPercent > 0.6) healthColor = '#2ecc71';
+                else if (healthPercent > 0.3) healthColor = '#f39c12';
+                else healthColor = '#e74c3c';
                 
                 ctx.fillStyle = healthColor;
-                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth * healthPercent, 6);
-                
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.strokeRect(this.x - barWidth/2, this.y - this.radius - 12, barWidth, 6);
+                ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth * healthPercent, 4);
             }
 
             distanceTo(other) {
@@ -959,11 +929,11 @@
                     if (other === this) continue;
                     let dx = this.x - other.x, dy = this.y - other.y;
                     let dist = Math.hypot(dx, dy);
-                    let minDist = this.radius + other.radius + 6;
+                    let minDist = this.radius + other.radius + 4;
                     if (dist < minDist && dist > 0) {
                         let force = (minDist - dist) / minDist;
-                        pushX += dx / dist * force * 1.5;
-                        pushY += dy / dist * force * 1.5;
+                        pushX += dx / dist * force * 1.2;
+                        pushY += dy / dist * force * 1.2;
                     }
                 }
                 this.x += pushX;
@@ -981,16 +951,15 @@
 
                 // Healers try to heal injured allies
                 if (this.type === 'healer') {
-                    const injuredAllies = allies.filter(a => a.health < a.maxHealth && a !== this);
+                    const injuredAllies = allies.filter(a => a.health < a.maxHealth && a !== this && this.distanceTo(a) <= this.healRange);
                     if (injuredAllies.length > 0) {
                         let target = injuredAllies.reduce((a, b) => a.health < b.health ? a : b);
                         let dx = target.x - this.x, dy = target.y - this.y;
                         let dist = Math.hypot(dx, dy);
-                        let desiredX = dx / dist, desiredY = dy / dist;
-                        let stopDist = this.radius + target.radius + 15;
-
-                        if (dist > stopDist) {
-                            let speed = this.maxSpeed * Math.min(1, dist / 120);
+                        
+                        if (dist > this.radius + target.radius + 5) {
+                            let desiredX = dx / dist, desiredY = dy / dist;
+                            let speed = this.maxSpeed * Math.min(1, dist / 80);
                             this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
                             this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
                             this.x += this.velX;
@@ -1025,10 +994,14 @@
                 let dx = target.x - this.x, dy = target.y - this.y;
                 let dist = Math.hypot(dx, dy);
                 let desiredX = dx / dist, desiredY = dy / dist;
-                let stopDist = this.radius + target.radius + 8;
-                let speed = this.maxSpeed * Math.min(1, dist / 120);
-
-                if (dist > stopDist) {
+                
+                // CLOSE COMBAT ONLY: Units must be very close to attack
+                let attackRange = this.radius + target.radius + 5;
+                
+                if (dist > attackRange) {
+                    // Move toward enemy but stop at combat range
+                    let moveDist = Math.max(0, dist - COMBAT_RANGE);
+                    let speed = this.maxSpeed * Math.min(1, moveDist / 100);
                     this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
                     this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
                     this.x += this.velX;
@@ -1038,10 +1011,10 @@
                     this.velY *= 0.8;
                 }
 
-                if (dist > this.radius + 1 && dist <= stopDist && this.type !== 'healer') {
+                // Attack only when in very close range
+                if (dist <= COMBAT_RANGE && this.type !== 'healer') {
                     let now = performance.now();
                     if (now - this.lastAttack >= this.attackCooldown) {
-                        // Calculate directional damage
                         const damageMultiplier = getDirectionalDamageMultiplier(this, target);
                         const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                         const isCritical = damageMultiplier > 1.5;
@@ -1051,15 +1024,15 @@
                         
                         damageTexts.push(new DamageText(
                             target.x,
-                            target.y - target.radius - 10,
+                            target.y - target.radius - 8,
                             actualDamage,
                             false,
                             isCritical
                         ));
                         
                         attackEffects.push(new AttackEffect(
-                            target.x + (Math.random() - 0.5) * 10,
-                            target.y + (Math.random() - 0.5) * 10,
+                            target.x + (Math.random() - 0.5) * 8,
+                            target.y + (Math.random() - 0.5) * 8,
                             this.team,
                             isCritical
                         ));
@@ -1068,29 +1041,29 @@
             }
         }
 
-        // Mouse event handling with proper coordinates
+        // Touch and mouse event handling
         function getCanvasMousePos(event) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             
+            let clientX, clientY;
+            
+            if (event.type.includes('touch')) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            
             return {
-                x: (event.clientX - rect.left) * scaleX,
-                y: (event.clientY - rect.top) * scaleY
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
             };
         }
 
-        canvas.addEventListener("mousemove", e => {
-            const pos = getCanvasMousePos(e);
-            mouseX = pos.x;
-            mouseY = pos.y;
-        });
-
-        canvas.addEventListener("click", e => {
-            const pos = getCanvasMousePos(e);
-            const x = pos.x, y = pos.y;
-
-            // Check if click is within valid placement area
+        function handleCanvasClick(x, y) {
             const radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
             const withinBounds = x > mapPadding + radius && 
                                x < canvas.width - mapPadding - radius &&
@@ -1098,7 +1071,7 @@
                                y < canvas.height - mapPadding - radius;
 
             if (!withinBounds) {
-                showNotification('Cannot place units outside the battlefield!', 'warning');
+                showNotification('Cannot place outside battlefield!', 'warning');
                 return;
             }
 
@@ -1120,30 +1093,56 @@
                     showNotification('Unit deleted', 'warning');
                 }
             }
+        }
+
+        // Event listeners
+        canvas.addEventListener("mousemove", e => {
+            const pos = getCanvasMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
         });
+
+        canvas.addEventListener("click", e => {
+            const pos = getCanvasMousePos(e);
+            handleCanvasClick(pos.x, pos.y);
+        });
+
+        // Touch events for mobile
+        canvas.addEventListener("touchmove", e => {
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+        }, { passive: false });
+
+        canvas.addEventListener("touchstart", e => {
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            handleCanvasClick(pos.x, pos.y);
+        }, { passive: false });
 
         // Button event listeners
         document.getElementById("placeSoldier").onclick = () => {
             placingMode = "soldier";
-            showNotification("Placing: 👤 Soldier", 'info');
+            showNotification("Placing: Soldier", 'info');
             showGhost = true;
         };
         
         document.getElementById("placeTank").onclick = () => {
             placingMode = "tank";
-            showNotification("Placing: 🛡️ Tank", 'info');
+            showNotification("Placing: Tank", 'info');
             showGhost = true;
         };
         
         document.getElementById("placeHealer").onclick = () => {
             placingMode = "healer";
-            showNotification("Placing: ❤️ Healer", 'info');
+            showNotification("Placing: Healer", 'info');
             showGhost = true;
         };
         
         document.getElementById("deleteTool").onclick = () => {
             placingMode = "delete";
-            showNotification("🗑️ Delete Tool Active", 'warning');
+            showNotification("Delete Tool Active", 'warning');
             showGhost = false;
         };
         
@@ -1153,38 +1152,36 @@
             if (battleStartTime === 0) {
                 battleStartTime = performance.now();
             }
-            showNotification("⚔️ Battle started!", 'info');
+            showNotification("Battle started!", 'info');
         };
         
         document.getElementById("pauseBtn").onclick = () => {
             gameRunning = false;
             showGhost = true;
-            showNotification("⏸️ Battle paused", 'warning');
+            showNotification("Battle paused", 'warning');
         };
 
         document.getElementById("autoPlaceBtn").onclick = () => {
             circles = [];
-            const padding = mapPadding + 40;
+            const padding = mapPadding + 30;
             
             // Place red units on the LEFT
-            for (let i = 0; i < 4; i++) {
-                const x = padding + Math.random() * (canvas.width/2 - padding*2);
+            for (let i = 0; i < 3; i++) {
+                const x = padding + Math.random() * (canvas.width/2 - padding*1.5);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'red', 'soldier'));
             }
             
             // Place blue units on the RIGHT
-            for (let i = 0; i < 4; i++) {
-                const x = canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2);
+            for (let i = 0; i < 3; i++) {
+                const x = canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*1.5);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'blue', 'soldier'));
             }
             
             // Add special units
-            circles.push(new Circle(padding + 30, canvas.height/2 - 30, 'red', 'tank'));
-            circles.push(new Circle(padding + 30, canvas.height/2 + 30, 'red', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 30, canvas.height/2 - 30, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 30, canvas.height/2 + 30, 'blue', 'healer'));
+            circles.push(new Circle(padding + 20, canvas.height/2, 'red', 'tank'));
+            circles.push(new Circle(canvas.width - padding - 20, canvas.height/2, 'blue', 'tank'));
             
             showNotification('Auto-placed units!', 'info');
         };
@@ -1238,7 +1235,7 @@
                     remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
                     
                     gameOverModal.style.display = 'flex';
-                    showNotification(`${winner === 'red' ? '🔴 Red' : '🔵 Blue'} team wins!`, 'info');
+                    showNotification(`${winner === 'red' ? 'Red' : 'Blue'} team wins!`, 'info');
                 }
             }
             
@@ -1263,7 +1260,7 @@
         }
 
         // Initialize the game
-        showNotification('🎮 Welcome to Neon Battle Simulator!', 'info');
+        showNotification('Welcome to Neon Battle Simulator!', 'info');
         resizeCanvas();
         gameLoop();
     </script>
