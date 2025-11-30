@@ -194,6 +194,7 @@
             min-height: 0;
             padding: 20px;
             background: #36393f;
+            position: relative;
         }
 
         #gameCanvas { 
@@ -534,6 +535,9 @@
         let battleStartTime = 0;
         let battleDuration = 0;
 
+        // Map boundaries
+        const mapPadding = 30;
+
         // Initialize canvas size
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
@@ -584,7 +588,7 @@
                 ctx.stroke();
             }
             
-            // Draw team zones with modern colors
+            // Draw team zones with correct sides (Red Left, Blue Right)
             const redGradient = ctx.createLinearGradient(0, 0, canvas.width/2, 0);
             redGradient.addColorStop(0, 'rgba(237, 66, 69, 0.15)');
             redGradient.addColorStop(1, 'rgba(237, 66, 69, 0.05)');
@@ -617,15 +621,46 @@
             ctx.fillStyle = centerGradient;
             ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 200, 400, 400);
             
-            // Draw team banners
+            // Draw team labels (Simple names)
             ctx.fillStyle = 'rgba(237, 66, 69, 0.8)';
             ctx.font = 'bold 24px "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('🔴 RED KINGDOM', canvas.width/4, 40);
+            ctx.fillText('🔴 RED', canvas.width/4, 40);
             
             ctx.fillStyle = 'rgba(88, 101, 242, 0.8)';
-            ctx.fillText('🔵 BLUE EMPIRE', canvas.width*3/4, 40);
+            ctx.fillText('🔵 BLUE', canvas.width*3/4, 40);
+            
+            // Draw map boundaries (barriers)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            
+            // Top barrier
+            ctx.beginPath();
+            ctx.moveTo(mapPadding, mapPadding);
+            ctx.lineTo(canvas.width - mapPadding, mapPadding);
+            ctx.stroke();
+            
+            // Bottom barrier
+            ctx.beginPath();
+            ctx.moveTo(mapPadding, canvas.height - mapPadding);
+            ctx.lineTo(canvas.width - mapPadding, canvas.height - mapPadding);
+            ctx.stroke();
+            
+            // Left barrier
+            ctx.beginPath();
+            ctx.moveTo(mapPadding, mapPadding);
+            ctx.lineTo(mapPadding, canvas.height - mapPadding);
+            ctx.stroke();
+            
+            // Right barrier
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - mapPadding, mapPadding);
+            ctx.lineTo(canvas.width - mapPadding, canvas.height - mapPadding);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
             
             // Draw decorative corner elements
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -633,34 +668,34 @@
             
             // Top-left corner
             ctx.beginPath();
-            ctx.moveTo(20, 20);
-            ctx.lineTo(80, 20);
-            ctx.moveTo(20, 20);
-            ctx.lineTo(20, 80);
+            ctx.moveTo(mapPadding + 10, mapPadding + 10);
+            ctx.lineTo(mapPadding + 50, mapPadding + 10);
+            ctx.moveTo(mapPadding + 10, mapPadding + 10);
+            ctx.lineTo(mapPadding + 10, mapPadding + 50);
             ctx.stroke();
             
             // Top-right corner
             ctx.beginPath();
-            ctx.moveTo(canvas.width - 20, 20);
-            ctx.lineTo(canvas.width - 80, 20);
-            ctx.moveTo(canvas.width - 20, 20);
-            ctx.lineTo(canvas.width - 20, 80);
+            ctx.moveTo(canvas.width - mapPadding - 10, mapPadding + 10);
+            ctx.lineTo(canvas.width - mapPadding - 50, mapPadding + 10);
+            ctx.moveTo(canvas.width - mapPadding - 10, mapPadding + 10);
+            ctx.lineTo(canvas.width - mapPadding - 10, mapPadding + 50);
             ctx.stroke();
             
             // Bottom-left corner
             ctx.beginPath();
-            ctx.moveTo(20, canvas.height - 20);
-            ctx.lineTo(80, canvas.height - 20);
-            ctx.moveTo(20, canvas.height - 20);
-            ctx.lineTo(20, canvas.height - 80);
+            ctx.moveTo(mapPadding + 10, canvas.height - mapPadding - 10);
+            ctx.lineTo(mapPadding + 50, canvas.height - mapPadding - 10);
+            ctx.moveTo(mapPadding + 10, canvas.height - mapPadding - 10);
+            ctx.lineTo(mapPadding + 10, canvas.height - mapPadding - 50);
             ctx.stroke();
             
             // Bottom-right corner
             ctx.beginPath();
-            ctx.moveTo(canvas.width - 20, canvas.height - 20);
-            ctx.lineTo(canvas.width - 80, canvas.height - 20);
-            ctx.moveTo(canvas.width - 20, canvas.height - 20);
-            ctx.lineTo(canvas.width - 20, canvas.height - 80);
+            ctx.moveTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 10);
+            ctx.lineTo(canvas.width - mapPadding - 50, canvas.height - mapPadding - 10);
+            ctx.moveTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 10);
+            ctx.lineTo(canvas.width - mapPadding - 10, canvas.height - mapPadding - 50);
             ctx.stroke();
         }
 
@@ -683,8 +718,17 @@
                 color = "rgba(155, 89, 182, 0.6)";
             }
                 
+            // Check if position is valid (within boundaries and not blocked)
+            const withinBounds = mouseX > mapPadding + radius && 
+                               mouseX < canvas.width - mapPadding - radius &&
+                               mouseY > mapPadding + radius && 
+                               mouseY < canvas.height - mapPadding - radius;
+            
             let blocked = circles.some(c => Math.hypot(c.x - mouseX, c.y - mouseY) < (c.radius + radius) * 0.8);
-            if (blocked) color = "rgba(237, 66, 69, 0.8)";
+            
+            if (blocked || !withinBounds) {
+                color = "rgba(237, 66, 69, 0.8)";
+            }
             
             ctx.beginPath();
             ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
@@ -939,6 +983,10 @@
                 }
                 this.x += pushX;
                 this.y += pushY;
+                
+                // Keep units within boundaries
+                this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
+                this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
             }
 
             updateAI(enemies, allies) {
@@ -1035,30 +1083,45 @@
             }
         }
 
-        // [Rest of the game logic functions - updateStats, showGameOver, resetGame, etc.]
-        // ... (game loop, event listeners, and other functions from previous implementation)
-
-        // Initialize the game
-        showNotification('🎮 Welcome to Neon Battle Simulator!', 'info');
-        resizeCanvas();
-        gameLoop();
-
-        // Mouse event handling
-        canvas.addEventListener("mousemove", e => {
+        // Mouse event handling with proper coordinates
+        function getCanvasMousePos(event) {
             const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (event.clientX - rect.left) * scaleX,
+                y: (event.clientY - rect.top) * scaleY
+            };
+        }
+
+        canvas.addEventListener("mousemove", e => {
+            const pos = getCanvasMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
         });
 
         canvas.addEventListener("click", e => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left, y = e.clientY - rect.top;
+            const pos = getCanvasMousePos(e);
+            const x = pos.x, y = pos.y;
+
+            // Check if click is within valid placement area
+            const radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
+            const withinBounds = x > mapPadding + radius && 
+                               x < canvas.width - mapPadding - radius &&
+                               y > mapPadding + radius && 
+                               y < canvas.height - mapPadding - radius;
+
+            if (!withinBounds) {
+                showNotification('Cannot place units outside the battlefield!', 'warning');
+                return;
+            }
 
             if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer") {
                 let type = placingMode;
                 let team = x < canvas.width/2 ? 'red' : 'blue';
                 
-                let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < c.radius * 2);
+                let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
                 if (!blocked) {
                     circles.push(new Circle(x, y, team, type));
                     showNotification(`Placed ${type} on ${team} team`, 'info');
@@ -1116,16 +1179,16 @@
 
         document.getElementById("autoPlaceBtn").onclick = () => {
             circles = [];
-            const padding = 40;
+            const padding = mapPadding + 40;
             
-            // Place red units on the left
+            // Place red units on the LEFT
             for (let i = 0; i < 4; i++) {
                 const x = padding + Math.random() * (canvas.width/2 - padding*2);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'red', 'soldier'));
             }
             
-            // Place blue units on the right
+            // Place blue units on the RIGHT
             for (let i = 0; i < 4; i++) {
                 const x = canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2);
                 const y = padding + Math.random() * (canvas.height - padding*2);
@@ -1213,6 +1276,11 @@
         function closeModal() {
             gameOverModal.style.display = 'none';
         }
+
+        // Initialize the game
+        showNotification('🎮 Welcome to Neon Battle Simulator!', 'info');
+        resizeCanvas();
+        gameLoop();
     </script>
 </body>
 </html>
