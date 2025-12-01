@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Battle Simulator</title>
+    <title>Neon Battle Simulator - Ranger Healers</title>
     <style>
         * { 
             margin: 0; 
@@ -479,12 +479,12 @@
 </head>
 <body>
     <div class="header">
-        <h1>Neon Battle Simulator</h1>
+        <h1>Neon Battle Simulator - Ranger Healers</h1>
         <div class="button-groups">
             <div class="button-row">
                 <button class="soldier-btn" id="placeSoldier">👤 Soldier</button>
                 <button class="special-btn" id="placeTank">🛡️ Tank</button>
-                <button class="special-btn" id="placeHealer">❤️ Healer</button>
+                <button class="special-btn" id="placeHealer">🏹 Ranger Healer</button>
             </div>
             <div class="button-row">
                 <button class="delete-btn" id="deleteTool">🗑️ Delete</button>
@@ -599,6 +599,7 @@
         let circles = [];
         let mouseX = 0, mouseY = 0, showGhost = true;
         let attackEffects = [];
+        let healingEffects = [];
         let damageTexts = [];
         let gameSpeed = 1.0;
         let baseUnitSize = 20;
@@ -607,8 +608,8 @@
 
         // Map boundaries
         const mapPadding = 20;
-        // EXTREMELY CLOSE combat range - units must be literally touching to attack
         const COMBAT_RANGE = 5;
+        const HEALER_SAFE_DISTANCE = 200; // Healers stay this far from enemies
 
         // Initialize canvas size
         resizeCanvas();
@@ -703,7 +704,8 @@
                 radius = baseUnitSize * 1.3 * (Math.min(canvas.width, canvas.height) / 800);
             } else if (placingMode === "healer") {
                 type = "healer";
-                color = "rgba(155, 89, 182, 0.6)";
+                color = "rgba(46, 204, 113, 0.6)";
+                radius = baseUnitSize * 0.9 * (Math.min(canvas.width, canvas.height) / 800);
             }
                 
             // Check if position is valid
@@ -722,6 +724,16 @@
             ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
             ctx.fillStyle = color;
             ctx.fill();
+            
+            // Draw ranger bow for healer preview
+            if (type === "healer") {
+                ctx.beginPath();
+                ctx.moveTo(mouseX - radius/2, mouseY);
+                ctx.lineTo(mouseX + radius/2, mouseY);
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
         }
 
         // Get directional damage multiplier
@@ -779,6 +791,59 @@
                 ctx.fillStyle = color;
                 ctx.textAlign = 'center';
                 ctx.fillText((this.isHeal ? '+' : '-') + this.damage, this.x, this.y);
+            }
+        }
+
+        class HealingEffect {
+            constructor(startX, startY, targetX, targetY, amount) {
+                this.startX = startX;
+                this.startY = startY;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.amount = amount;
+                this.progress = 0;
+                this.speed = 0.05;
+                this.life = 1.0;
+            }
+            
+            update() {
+                this.progress += this.speed;
+                this.life -= 0.01;
+                return this.progress <= 1.0 && this.life > 0;
+            }
+            
+            draw() {
+                // Calculate current position along the line
+                const currentX = this.startX + (this.targetX - this.startX) * this.progress;
+                const currentY = this.startY + (this.targetY - this.startY) * this.progress;
+                
+                // Draw healing line with glow effect
+                ctx.beginPath();
+                ctx.moveTo(this.startX, this.startY);
+                ctx.lineTo(currentX, currentY);
+                
+                // Green healing line with glow
+                ctx.strokeStyle = `rgba(46, 204, 113, ${0.7 * this.life})`;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                
+                // Glow effect
+                ctx.strokeStyle = `rgba(46, 204, 113, ${0.3 * this.life})`;
+                ctx.lineWidth = 8;
+                ctx.stroke();
+                
+                // Draw healing orb at the end
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(46, 204, 113, ${this.life})`;
+                ctx.fill();
+                
+                // Glow around orb
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 8, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(46, 204, 113, ${0.3 * this.life})`;
+                ctx.fill();
             }
         }
 
@@ -846,15 +911,16 @@
                     this.maxSpeed = 1.0 * sizeMultiplier;
                     this.turnSpeed = 0.1;
                 } else if (type === 'healer') {
-                    this.radius = baseUnitSize * sizeMultiplier;
-                    this.health = 80;
-                    this.maxHealth = 80;
+                    this.radius = baseUnitSize * 0.9 * sizeMultiplier;
+                    this.health = 70;
+                    this.maxHealth = 70;
                     this.attackPower = 0;
-                    this.healPower = 8;
-                    this.healCooldown = 400;
-                    this.maxSpeed = 1.5 * sizeMultiplier;
-                    this.turnSpeed = 0.12;
-                    this.healRange = 40;
+                    this.healPower = 6;
+                    this.healCooldown = 300;
+                    this.maxSpeed = 1.6 * sizeMultiplier;
+                    this.turnSpeed = 0.14;
+                    this.healRange = 150; // Healers can heal from distance
+                    this.safeDistance = HEALER_SAFE_DISTANCE * sizeMultiplier; // Stay away from enemies
                 }
                 
                 this.lastAttack = 0;
@@ -880,8 +946,8 @@
                         gradient.addColorStop(0, '#ff7979');
                         gradient.addColorStop(1, '#c0392b');
                     } else if (this.type === 'healer') {
-                        gradient.addColorStop(0, '#f8c471');
-                        gradient.addColorStop(1, '#e67e22');
+                        gradient.addColorStop(0, '#a3e4d7');
+                        gradient.addColorStop(1, '#27ae60');
                     } else {
                         gradient.addColorStop(0, '#ff6b6b');
                         gradient.addColorStop(1, '#e74c3c');
@@ -904,6 +970,22 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
+                // Draw ranger bow for healers
+                if (this.type === 'healer') {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.facingAngle);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius/2, 0);
+                    ctx.lineTo(this.radius/2, 0);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                }
+                
                 // Health bar
                 const barWidth = this.radius * 2;
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
@@ -917,6 +999,21 @@
                 
                 ctx.fillStyle = healthColor;
                 ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth * healthPercent, 4);
+                
+                // Show healer range (debug)
+                if (this.type === 'healer' && false) { // Set to true to see range circles
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.healRange, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(46, 204, 113, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.safeDistance, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(231, 76, 60, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
             }
 
             distanceTo(other) {
@@ -944,36 +1041,115 @@
                 this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
             }
 
+            findSafePosition(enemies, allies) {
+                // Find safest position away from enemies but near allies
+                let safestX = this.x;
+                let safestY = this.y;
+                let bestScore = -Infinity;
+                
+                // Check several positions around current position
+                for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+                    const testX = this.x + Math.cos(angle) * 50;
+                    const testY = this.y + Math.sin(angle) * 50;
+                    
+                    // Check if position is within bounds
+                    if (testX < mapPadding + this.radius || testX > canvas.width - mapPadding - this.radius ||
+                        testY < mapPadding + this.radius || testY > canvas.height - mapPadding - this.radius) {
+                        continue;
+                    }
+                    
+                    // Calculate safety score
+                    let score = 0;
+                    
+                    // Distance to closest enemy (higher is better)
+                    const closestEnemy = enemies.reduce((closest, enemy) => {
+                        const dist = Math.hypot(testX - enemy.x, testY - enemy.y);
+                        return dist < closest.dist ? {dist, enemy} : closest;
+                    }, {dist: Infinity, enemy: null});
+                    
+                    score += closestEnemy.dist * 2;
+                    
+                    // Penalty if too close to enemies
+                    if (closestEnemy.dist < this.safeDistance) {
+                        score -= (this.safeDistance - closestEnemy.dist) * 3;
+                    }
+                    
+                    // Bonus for being near injured allies
+                    const injuredAllies = allies.filter(a => a.health < a.maxHealth * 0.7 && a !== this);
+                    if (injuredAllies.length > 0) {
+                        const avgDist = injuredAllies.reduce((sum, ally) => 
+                            sum + Math.hypot(testX - ally.x, testY - ally.y), 0) / injuredAllies.length;
+                        score += 100 / (avgDist + 1);
+                    }
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        safestX = testX;
+                        safestY = testY;
+                    }
+                }
+                
+                return {x: safestX, y: safestY};
+            }
+
             updateAI(enemies, allies) {
                 if (!gameRunning) return;
 
                 this.applySeparation([...enemies, ...allies]);
 
-                // Healers try to heal injured allies
+                // HEALER AI - Stay at range and heal allies
                 if (this.type === 'healer') {
-                    const injuredAllies = allies.filter(a => a.health < a.maxHealth && a !== this && this.distanceTo(a) <= this.healRange);
+                    // Find closest enemy
+                    const closestEnemy = enemies.length > 0 ? enemies.reduce((closest, enemy) => {
+                        const dist = this.distanceTo(enemy);
+                        return dist < closest.dist ? {dist, enemy} : closest;
+                    }, {dist: Infinity, enemy: null}) : null;
+                    
+                    // Find injured allies that need healing
+                    const injuredAllies = allies.filter(a => a.health < a.maxHealth && a !== this);
+                    
+                    // If there are injured allies, heal them
                     if (injuredAllies.length > 0) {
                         let target = injuredAllies.reduce((a, b) => a.health < b.health ? a : b);
-                        let dx = target.x - this.x, dy = target.y - this.y;
-                        let dist = Math.hypot(dx, dy);
+                        let distToTarget = this.distanceTo(target);
                         
-                        if (dist > this.radius + target.radius + 2) {
-                            let desiredX = dx / dist, desiredY = dy / dist;
-                            let speed = this.maxSpeed;
-                            this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
-                            this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
-                            this.x += this.velX;
-                            this.y += this.velY;
-                        } else {
+                        // Check if we need to retreat from enemies
+                        if (closestEnemy && closestEnemy.dist < this.safeDistance) {
+                            // Too close to enemy! Retreat!
+                            const dx = this.x - closestEnemy.enemy.x;
+                            const dy = this.y - closestEnemy.enemy.y;
+                            const dist = Math.hypot(dx, dy);
+                            
+                            if (dist > 0) {
+                                const desiredX = dx / dist;
+                                const desiredY = dy / dist;
+                                const retreatSpeed = this.maxSpeed * 1.2;
+                                
+                                this.velX += (desiredX * retreatSpeed - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * retreatSpeed - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
+                        } 
+                        // If at safe distance, heal the target
+                        else if (distToTarget <= this.healRange) {
+                            // Slow down while healing
                             this.velX *= 0.8;
                             this.velY *= 0.8;
                             
-                            // Heal ally
+                            // Heal ally from range
                             let now = performance.now();
                             if (now - this.lastHeal >= this.healCooldown) {
                                 const healAmount = Math.min(this.healPower, target.maxHealth - target.health);
                                 target.health += healAmount;
                                 this.lastHeal = now;
+                                
+                                // Create healing effect
+                                healingEffects.push(new HealingEffect(
+                                    this.x, this.y,
+                                    target.x, target.y,
+                                    healAmount
+                                ));
                                 
                                 damageTexts.push(new DamageText(
                                     target.x,
@@ -982,12 +1158,67 @@
                                     true
                                 ));
                             }
+                        } 
+                        // Move toward target while maintaining safe distance from enemies
+                        else {
+                            const safePos = this.findSafePosition(enemies, allies);
+                            const dx = safePos.x - this.x;
+                            const dy = safePos.y - this.y;
+                            const dist = Math.hypot(dx, dy);
+                            
+                            if (dist > 5) {
+                                const desiredX = dx / dist;
+                                const desiredY = dy / dist;
+                                
+                                this.velX += (desiredX * this.maxSpeed - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * this.maxSpeed - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
                         }
                         return;
                     }
+                    
+                    // No injured allies - stay safe and support
+                    if (closestEnemy) {
+                        if (closestEnemy.dist < this.safeDistance) {
+                            // Retreat from enemy
+                            const dx = this.x - closestEnemy.enemy.x;
+                            const dy = this.y - closestEnemy.enemy.y;
+                            const dist = Math.hypot(dx, dy);
+                            
+                            if (dist > 0) {
+                                const desiredX = dx / dist;
+                                const desiredY = dy / dist;
+                                const retreatSpeed = this.maxSpeed * 1.2;
+                                
+                                this.velX += (desiredX * retreatSpeed - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * retreatSpeed - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
+                        } else {
+                            // Move to a safe position
+                            const safePos = this.findSafePosition(enemies, allies);
+                            const dx = safePos.x - this.x;
+                            const dy = safePos.y - this.y;
+                            const dist = Math.hypot(dx, dy);
+                            
+                            if (dist > 5) {
+                                const desiredX = dx / dist;
+                                const desiredY = dy / dist;
+                                
+                                this.velX += (desiredX * this.maxSpeed * 0.7 - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * this.maxSpeed * 0.7 - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
+                        }
+                    }
+                    return;
                 }
 
-                // Default behavior: attack enemies
+                // DEFAULT COMBAT AI for soldiers and tanks
                 if (enemies.length === 0) return;
 
                 let target = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
@@ -1136,7 +1367,7 @@
         
         document.getElementById("placeHealer").onclick = () => {
             placingMode = "healer";
-            showNotification("Placing: Healer", 'info');
+            showNotification("Placing: Ranger Healer (Shoots green healing beams)", 'info');
             showGhost = true;
         };
         
@@ -1183,7 +1414,11 @@
             circles.push(new Circle(padding + 20, canvas.height/2, 'red', 'tank'));
             circles.push(new Circle(canvas.width - padding - 20, canvas.height/2, 'blue', 'tank'));
             
-            showNotification('Auto-placed units!', 'info');
+            // Add ranger healers
+            circles.push(new Circle(padding + 40, canvas.height/3, 'red', 'healer'));
+            circles.push(new Circle(canvas.width - padding - 40, canvas.height*2/3, 'blue', 'healer'));
+            
+            showNotification('Auto-placed units including Ranger Healers!', 'info');
         };
 
         function gameLoop() {
@@ -1194,6 +1429,8 @@
             const blueTeam = circles.filter(c => c.team === "blue");
 
             attackEffects = attackEffects.filter(effect => effect.draw());
+            healingEffects = healingEffects.filter(effect => effect.update());
+            healingEffects.forEach(effect => effect.draw());
             damageTexts = damageTexts.filter(text => text.update());
             damageTexts.forEach(text => text.draw());
 
@@ -1245,6 +1482,7 @@
         function resetGame() {
             circles = [];
             attackEffects = [];
+            healingEffects = [];
             damageTexts = [];
             gameRunning = false;
             showGhost = true;
@@ -1260,7 +1498,7 @@
         }
 
         // Initialize the game
-        showNotification('Welcome to Neon Battle Simulator!', 'info');
+        showNotification('Welcome to Neon Battle Simulator with Ranger Healers!', 'info');
         resizeCanvas();
         gameLoop();
     </script>
