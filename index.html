@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Battle Simulator - Elite Healers</title>
+    <title>Neon Battle Simulator - With Musketeers</title>
     <style>
         * { 
             margin: 0; 
@@ -390,7 +390,7 @@
             .header button {
                 padding: 12px 16px;
                 font-size: 0.9rem;
-                min-width = 80px;
+                min-width: 80px;
             }
             
             .sidebar-section {
@@ -479,11 +479,12 @@
 </head>
 <body>
     <div class="header">
-        <h1>Neon Battle Simulator - Elite Healers</h1>
+        <h1>Neon Battle Simulator - Musketeers</h1>
         <div class="button-groups">
             <div class="button-row">
                 <button class="soldier-btn" id="placeSoldier">👤 Soldier</button>
                 <button class="special-btn" id="placeTank">🛡️ Tank</button>
+                <button class="special-btn" id="placeMusketeer">🎯 Musketeer</button>
                 <button class="special-btn" id="placeHealer">❤️ Healer</button>
             </div>
             <div class="button-row">
@@ -524,18 +525,22 @@
             </div>
 
             <div class="sidebar-section">
-                <h3 class="controls-title">Quick Controls</h3>
+                <h3 class="controls-title">Unit Info</h3>
                 <div class="control-item">
-                    <span class="key">Tap</span>
-                    <span>Place Unit</span>
+                    <span>🎯 Musketeer:</span>
+                    <span>Long range, high damage</span>
                 </div>
                 <div class="control-item">
-                    <span class="key">Delete</span>
-                    <span>Remove Unit</span>
+                    <span>Stats:</span>
+                    <span>60HP ⚔️25DMG</span>
                 </div>
                 <div class="control-item">
-                    <span class="key">Start</span>
-                    <span>Begin Battle</span>
+                    <span>Special:</span>
+                    <span>35% miss chance</span>
+                </div>
+                <div class="control-item">
+                    <span>Charge:</span>
+                    <span>Bayonet at close range</span>
                 </div>
             </div>
         </div>
@@ -599,6 +604,7 @@
         let circles = [];
         let mouseX = 0, mouseY = 0, showGhost = true;
         let attackEffects = [];
+        let musketEffects = [];
         let healingEffects = [];
         let damageTexts = [];
         let gameSpeed = 1.0;
@@ -610,6 +616,8 @@
         const mapPadding = 20;
         const COMBAT_RANGE = 5;
         const HEALER_MAX_DISTANCE = 120;
+        const MUSKET_RANGE = 150; // Musketeer shooting range
+        const BAYONET_RANGE = 60; // When enemies get this close, musketeers charge
 
         // Initialize canvas size
         resizeCanvas();
@@ -706,6 +714,10 @@
                 type = "healer";
                 color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)";
                 radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
+            } else if (placingMode === "musketeer") {
+                type = "musketeer";
+                color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)";
+                radius = baseUnitSize * 0.9 * (Math.min(canvas.width, canvas.height) / 800);
             }
                 
             // Check if position is valid
@@ -725,7 +737,7 @@
             ctx.fillStyle = color;
             ctx.fill();
             
-            // Draw healer cross symbol for healer preview
+            // Draw unit-specific symbols
             if (type === "healer") {
                 ctx.beginPath();
                 ctx.moveTo(mouseX - radius/2, mouseY);
@@ -735,6 +747,20 @@
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
                 ctx.lineWidth = 2;
                 ctx.stroke();
+            } else if (type === "musketeer") {
+                // Draw musket shape
+                ctx.beginPath();
+                ctx.moveTo(mouseX - radius, mouseY);
+                ctx.lineTo(mouseX + radius, mouseY);
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw musket tip
+                ctx.beginPath();
+                ctx.arc(mouseX + radius, mouseY, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.fill();
             }
         }
 
@@ -762,12 +788,13 @@
         }
 
         class DamageText {
-            constructor(x, y, damage, isHeal = false, isCritical = false) {
+            constructor(x, y, damage, isHeal = false, isCritical = false, isMiss = false) {
                 this.x = x;
                 this.y = y;
                 this.damage = damage;
                 this.isHeal = isHeal;
                 this.isCritical = isCritical;
+                this.isMiss = isMiss;
                 this.life = 1.0;
                 this.velocityY = -1;
             }
@@ -782,17 +809,75 @@
                 ctx.font = this.isCritical ? 'bold 16px Arial' : 'bold 13px Arial';
                 let color;
                 
-                if (this.isHeal) {
+                if (this.isMiss) {
+                    color = `rgba(155, 155, 155, ${this.life})`;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText("MISS", this.x, this.y);
+                } else if (this.isHeal) {
                     color = `rgba(46, 204, 113, ${this.life})`;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('+' + this.damage, this.x, this.y);
                 } else if (this.isCritical) {
                     color = `rgba(231, 76, 60, ${this.life})`;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('-' + this.damage, this.x, this.y);
                 } else {
                     color = `rgba(245, 125, 128, ${this.life})`;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('-' + this.damage, this.x, this.y);
                 }
+            }
+        }
+
+        class MusketEffect {
+            constructor(startX, startY, targetX, targetY, hit = true) {
+                this.startX = startX;
+                this.startY = startY;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.hit = hit;
+                this.progress = 0;
+                this.speed = 0.12;
+                this.life = 1.0;
+                this.color = hit ? '#f39c12' : '#95a5a6'; // Orange for hit, gray for miss
+            }
+            
+            update() {
+                this.progress += this.speed;
+                this.life -= 0.015;
+                return this.progress <= 1.0 && this.life > 0;
+            }
+            
+            draw() {
+                // Calculate current position along the line
+                const currentX = this.startX + (this.targetX - this.startX) * this.progress;
+                const currentY = this.startY + (this.targetY - this.startY) * this.progress;
                 
-                ctx.fillStyle = color;
-                ctx.textAlign = 'center';
-                ctx.fillText((this.isHeal ? '+' : '-') + this.damage, this.x, this.y);
+                // Draw musket ball trail
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, this.hit ? 4 : 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Draw smoke trail
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, this.hit ? 8 : 6, 0, Math.PI * 2);
+                ctx.fillStyle = this.hit ? 
+                    `rgba(243, 156, 18, ${0.3 * this.life})` : 
+                    `rgba(149, 165, 166, ${0.3 * this.life})`;
+                ctx.fill();
+                
+                // Draw firing flash at start
+                if (this.progress < 0.1) {
+                    ctx.beginPath();
+                    ctx.arc(this.startX, this.startY, 10 * (1 - this.progress * 10), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 200, 100, ${0.7 * this.life})`;
+                    ctx.fill();
+                }
             }
         }
 
@@ -932,10 +1017,19 @@
                     this.turnSpeed = 0.12;
                     this.healRange = 40;
                     this.currentHealTarget = null;
-                    this.lastHealEffect = 0;
-                    this.healSearchRadius = 200;
-                    this.eliteTarget = null; // The elite unit this healer is focusing on
-                    this.lastTargetSwitch = 0;
+                } else if (type === 'musketeer') {
+                    this.radius = baseUnitSize * 0.9 * sizeMultiplier;
+                    this.health = 60; // Lower health
+                    this.maxHealth = 60;
+                    this.attackPower = 25; // High damage
+                    this.attackCooldown = 1200; // Slow reload
+                    this.maxSpeed = 1.6 * sizeMultiplier;
+                    this.turnSpeed = 0.13;
+                    this.shootingRange = MUSKET_RANGE * sizeMultiplier;
+                    this.bayonetRange = BAYONET_RANGE * sizeMultiplier;
+                    this.isCharging = false;
+                    this.missChance = 0.35; // 35% chance to miss
+                    this.lastShot = 0;
                 }
                 
                 this.lastAttack = 0;
@@ -957,6 +1051,7 @@
                     this.x, this.y, this.radius
                 );
                 
+                // Team colors for all units
                 if (this.team === 'red') {
                     if (this.type === 'tank') {
                         gradient.addColorStop(0, '#ff7979');
@@ -964,6 +1059,9 @@
                     } else if (this.type === 'healer') {
                         gradient.addColorStop(0, '#f8c471');
                         gradient.addColorStop(1, '#e67e22');
+                    } else if (this.type === 'musketeer') {
+                        gradient.addColorStop(0, '#ff9f80');
+                        gradient.addColorStop(1, '#d35400');
                     } else {
                         gradient.addColorStop(0, '#ff6b6b');
                         gradient.addColorStop(1, '#e74c3c');
@@ -975,6 +1073,9 @@
                     } else if (this.type === 'healer') {
                         gradient.addColorStop(0, '#81ecec');
                         gradient.addColorStop(1, '#00cec9');
+                    } else if (this.type === 'musketeer') {
+                        gradient.addColorStop(0, '#80bfff');
+                        gradient.addColorStop(1, '#1a5276');
                     } else {
                         gradient.addColorStop(0, '#74b9ff');
                         gradient.addColorStop(1, '#3498db');
@@ -986,7 +1087,7 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                // Draw healer cross symbol
+                // Draw unit-specific symbols
                 if (this.type === 'healer') {
                     ctx.beginPath();
                     ctx.moveTo(this.x - this.radius/2, this.y);
@@ -996,6 +1097,55 @@
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
                     ctx.lineWidth = 2;
                     ctx.stroke();
+                } else if (this.type === 'musketeer') {
+                    // Draw musket
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.facingAngle);
+                    
+                    // Musket barrel
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius, 0);
+                    ctx.lineTo(this.radius, 0);
+                    ctx.strokeStyle = this.isCharging ? '#2c3e50' : '#34495e';
+                    ctx.lineWidth = this.isCharging ? 4 : 3;
+                    ctx.stroke();
+                    
+                    // Bayonet when charging
+                    if (this.isCharging) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.radius, 0);
+                        ctx.lineTo(this.radius + 8, 0);
+                        ctx.strokeStyle = '#7f8c8d';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        
+                        // Bayonet triangle
+                        ctx.beginPath();
+                        ctx.moveTo(this.radius + 8, 0);
+                        ctx.lineTo(this.radius + 4, -3);
+                        ctx.lineTo(this.radius + 4, 3);
+                        ctx.closePath();
+                        ctx.fillStyle = '#bdc3c7';
+                        ctx.fill();
+                    } else {
+                        // Musket tip
+                        ctx.beginPath();
+                        ctx.arc(this.radius, 0, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = '#34495e';
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                    
+                    // Show charging indicator
+                    if (this.isCharging) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
                 }
                 
                 // Health bar
@@ -1012,13 +1162,19 @@
                 ctx.fillStyle = healthColor;
                 ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth * healthPercent, 4);
                 
-                // Show gold outline if this is an elite unit being focused by healers
-                if (this.eliteFocus && this.type !== 'healer') {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
+                // Show reloading indicator for musketeers
+                if (this.type === 'musketeer' && !this.isCharging) {
+                    const now = performance.now();
+                    const reloadProgress = Math.min(1, (now - this.lastShot) / this.attackCooldown);
+                    
+                    if (reloadProgress < 1) {
+                        // Draw reloading circle
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius + 8, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * reloadProgress));
+                        ctx.strokeStyle = 'rgba(52, 152, 219, 0.7)';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
                 }
             }
 
@@ -1047,125 +1203,184 @@
                 this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
             }
 
-            findEliteTarget(allies) {
-                // Find the teammate with the HIGHEST health to focus on
-                const availableAllies = allies.filter(a => a !== this && a.health > 0);
-                
-                if (availableAllies.length === 0) return null;
-                
-                let bestTarget = null;
-                let bestScore = -Infinity;
-                
-                for (let ally of availableAllies) {
-                    let score = 0;
-                    
-                    // 1. HIGHEST PRIORITY: Current health (higher is better!)
-                    score += (ally.health / ally.maxHealth) * 100;
-                    
-                    // 2. Unit type priority (tanks get highest priority, then soldiers)
-                    if (ally.type === 'tank') score += 80;
-                    else if (ally.type === 'soldier') score += 50;
-                    else if (ally.type === 'healer') score += 20;
-                    
-                    // 3. Maximum health pool (units with higher max health get priority)
-                    score += (ally.maxHealth / 200) * 30; // Normalize by tank health
-                    
-                    // 4. Distance penalty (closer is better)
-                    const dist = this.distanceTo(ally);
-                    score -= dist * 0.3;
-                    
-                    // 5. Bonus if this ally is already being focused by other healers
-                    // (Elite strategy: group healers on the strongest unit)
-                    const otherHealersTargeting = circles.filter(c => 
-                        c.type === 'healer' && 
-                        c.team === this.team && 
-                        c !== this && 
-                        c.eliteTarget === ally.id
-                    ).length;
-                    
-                    score += otherHealersTargeting * 10; // POSITIVE bonus - group healers!
-                    
-                    // 6. Bonus if ally is in combat (taking damage but still has high health)
-                    if (ally.health < ally.lastHealth) {
-                        // Taking damage right now
-                        if (ally.health > ally.maxHealth * 0.7) {
-                            score += 40; // High health unit taking damage - protect it!
-                        }
-                    }
-                    
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestTarget = ally;
-                    }
-                }
-                
-                return bestTarget;
-            }
-
             updateAI(enemies, allies) {
                 if (!gameRunning) return;
 
                 this.applySeparation([...enemies, ...allies]);
 
-                // HEALER AI - Focus on healing the HIGHEST health teammates
-                if (this.type === 'healer') {
-                    const now = Date.now();
+                // MUSKETEER AI - Ranged attacks with bayonet charge
+                if (this.type === 'musketeer') {
+                    if (enemies.length === 0) return;
+
+                    // Find closest enemy
+                    let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
+                    let distToEnemy = this.distanceTo(closestEnemy);
                     
-                    // Update elite target occasionally
-                    if (!this.eliteTarget || now - this.lastTargetSwitch > 4000) {
-                        const newEliteTarget = this.findEliteTarget(allies);
-                        if (newEliteTarget) {
-                            this.eliteTarget = newEliteTarget.id;
-                            this.lastTargetSwitch = now;
-                            
-                            // Mark this unit as elite focus
-                            newEliteTarget.eliteFocus = true;
-                            setTimeout(() => {
-                                if (newEliteTarget.eliteFocus) {
-                                    newEliteTarget.eliteFocus = false;
-                                }
-                            }, 1000);
-                        }
-                    }
-                    
-                    // Find our elite target
-                    let target = null;
-                    if (this.eliteTarget) {
-                        target = allies.find(a => a.id === this.eliteTarget);
-                    }
-                    
-                    // If elite target not found or dead, find a new one
-                    if (!target || target.health <= 0) {
-                        target = this.findEliteTarget(allies);
-                        if (target) {
-                            this.eliteTarget = target.id;
-                            this.lastTargetSwitch = now;
-                        }
-                    }
-                    
-                    if (target) {
-                        const distToTarget = this.distanceTo(target);
+                    // Check if enemy is too close for shooting
+                    if (distToEnemy < this.bayonetRange) {
+                        // Enemy too close - CHARGE WITH BAYONET!
+                        this.isCharging = true;
                         
-                        // If we're in healing range, heal the target
-                        if (distToTarget <= this.healRange) {
+                        // Move toward enemy for melee combat
+                        let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                        let dist = Math.hypot(dx, dy);
+                        
+                        if (dist > 0) {
+                            const desiredX = dx / dist;
+                            const desiredY = dy / dist;
+                            const chargeSpeed = this.maxSpeed * 1.1; // Faster when charging
+                            
+                            this.velX += (desiredX * chargeSpeed - this.velX) * this.turnSpeed;
+                            this.velY += (desiredY * chargeSpeed - this.velY) * this.turnSpeed;
+                            this.x += this.velX;
+                            this.y += this.velY;
+                        }
+                        
+                        // Check for melee contact
+                        let touchDistance = this.radius + closestEnemy.radius + 1;
+                        if (distToEnemy <= touchDistance) {
+                            // Bayonet attack
+                            let now = performance.now();
+                            if (now - this.lastAttack >= this.attackCooldown * 0.5) { // Faster attacks in melee
+                                const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
+                                const actualDamage = Math.floor(this.attackPower * 0.7 * damageMultiplier); // Reduced damage for bayonet
+                                const isCritical = damageMultiplier > 1.5;
+                                
+                                closestEnemy.health -= actualDamage;
+                                this.lastAttack = now;
+                                
+                                damageTexts.push(new DamageText(
+                                    closestEnemy.x,
+                                    closestEnemy.y - closestEnemy.radius - 8,
+                                    actualDamage,
+                                    false,
+                                    isCritical
+                                ));
+                                
+                                attackEffects.push(new AttackEffect(
+                                    closestEnemy.x + (Math.random() - 0.5) * 8,
+                                    closestEnemy.y + (Math.random() - 0.5) * 8,
+                                    this.team,
+                                    isCritical
+                                ));
+                            }
+                        }
+                    } else {
+                        // Enemy at shooting range - STOP CHARGING and shoot
+                        this.isCharging = false;
+                        
+                        // Slow down to aim
+                        this.velX *= 0.9;
+                        this.velY *= 0.9;
+                        
+                        // Face the enemy
+                        let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                        this.facingAngle = Math.atan2(dy, dx);
+                        
+                        // Shoot if in range
+                        if (distToEnemy <= this.shootingRange) {
+                            let now = performance.now();
+                            if (now - this.lastShot >= this.attackCooldown) {
+                                // 35% chance to miss
+                                const miss = Math.random() < this.missChance;
+                                
+                                if (!miss) {
+                                    // HIT - calculate damage
+                                    const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
+                                    const actualDamage = Math.floor(this.attackPower * damageMultiplier);
+                                    const isCritical = damageMultiplier > 1.5;
+                                    
+                                    closestEnemy.health -= actualDamage;
+                                    
+                                    damageTexts.push(new DamageText(
+                                        closestEnemy.x,
+                                        closestEnemy.y - closestEnemy.radius - 8,
+                                        actualDamage,
+                                        false,
+                                        isCritical
+                                    ));
+                                    
+                                    attackEffects.push(new AttackEffect(
+                                        closestEnemy.x + (Math.random() - 0.5) * 8,
+                                        closestEnemy.y + (Math.random() - 0.5) * 8,
+                                        this.team,
+                                        isCritical
+                                    ));
+                                } else {
+                                    // MISS - show miss text
+                                    damageTexts.push(new DamageText(
+                                        closestEnemy.x,
+                                        closestEnemy.y - closestEnemy.radius - 8,
+                                        0,
+                                        false,
+                                        false,
+                                        true
+                                    ));
+                                }
+                                
+                                // Create musket effect
+                                musketEffects.push(new MusketEffect(
+                                    this.x, this.y,
+                                    closestEnemy.x, closestEnemy.y,
+                                    !miss
+                                ));
+                                
+                                this.lastShot = now;
+                            }
+                        } else {
+                            // Move toward enemy to get in range
+                            if (distToEnemy > 0) {
+                                const desiredX = dx / distToEnemy;
+                                const desiredY = dy / distToEnemy;
+                                
+                                this.velX += (desiredX * this.maxSpeed * 0.7 - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * this.maxSpeed * 0.7 - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // HEALER AI - Focus on healing highest health teammates
+                if (this.type === 'healer') {
+                    // Find ally with highest health
+                    const healthyAllies = allies.filter(a => a !== this && a.health > 0);
+                    
+                    if (healthyAllies.length > 0) {
+                        // Sort by health (highest first)
+                        healthyAllies.sort((a, b) => b.health - a.health);
+                        let target = healthyAllies[0];
+                        let distToTarget = this.distanceTo(target);
+                        
+                        // Move toward target if too far
+                        if (distToTarget > this.healRange + 5) {
+                            let dx = target.x - this.x, dy = target.y - this.y;
+                            let dist = Math.hypot(dx, dy);
+                            
+                            if (dist > 0) {
+                                const desiredX = dx / dist;
+                                const desiredY = dy / dist;
+                                const moveSpeed = Math.min(this.maxSpeed, distToTarget - this.healRange) * 0.5;
+                                
+                                this.velX += (desiredX * moveSpeed - this.velX) * this.turnSpeed;
+                                this.velY += (desiredY * moveSpeed - this.velY) * this.turnSpeed;
+                                this.x += this.velX;
+                                this.y += this.velY;
+                            }
+                        } else {
                             // Slow down while healing
                             this.velX *= 0.8;
                             this.velY *= 0.8;
                             
-                            // Heal ally (even if they're near full health - keep them topped up!)
+                            // Heal ally
+                            let now = performance.now();
                             if (now - this.lastHeal >= this.healCooldown) {
                                 const healAmount = Math.min(this.healPower, target.maxHealth - target.health);
                                 if (healAmount > 0) {
                                     target.health += healAmount;
                                     this.lastHeal = now;
-                                    
-                                    // Mark the unit as being healed by this healer
-                                    target.currentHealer = this.id;
-                                    setTimeout(() => {
-                                        if (target.currentHealer === this.id) {
-                                            target.currentHealer = null;
-                                        }
-                                    }, 500);
                                     
                                     // Create healing effect
                                     const healEffect = new HealingEffect(
@@ -1176,90 +1391,15 @@
                                     healEffect.healingUnitId = target.id;
                                     healingEffects.push(healEffect);
                                     
-                                    // Show damage/heal text (only show if significant healing)
-                                    if (healAmount > 2) {
-                                        damageTexts.push(new DamageText(
-                                            target.x,
-                                            target.y - target.radius - 10,
-                                            healAmount,
-                                            true
-                                        ));
-                                    }
-                                }
-                            }
-                            
-                            // Set current healing target
-                            this.currentHealTarget = target.id;
-                        } 
-                        // If not in range, move toward the elite target
-                        else {
-                            let dx = target.x - this.x;
-                            let dy = target.y - this.y;
-                            let dist = Math.hypot(dx, dy);
-                            
-                            if (dist > 0) {
-                                const desiredX = dx / dist;
-                                const desiredY = dy / dist;
-                                
-                                // Calculate speed based on how important this target is
-                                const targetHealthPercent = target.health / target.maxHealth;
-                                let moveSpeed = this.maxSpeed;
-                                
-                                // Move faster if target is a tank or has very high health
-                                if (target.type === 'tank') {
-                                    moveSpeed *= 1.2;
-                                }
-                                
-                                // Don't move too fast if we're close
-                                if (dist < this.healRange + 30) {
-                                    moveSpeed *= 0.7;
-                                }
-                                
-                                this.velX += (desiredX * moveSpeed - this.velX) * this.turnSpeed;
-                                this.velY += (desiredY * moveSpeed - this.velY) * this.turnSpeed;
-                                this.x += this.velX;
-                                this.y += this.velY;
-                            }
-                            
-                            this.currentHealTarget = target.id;
-                        }
-                    } 
-                    else {
-                        // No elite target found - stay with the group
-                        if (allies.length > 1) {
-                            // Find the strongest ally in the group
-                            const strongestAlly = allies.reduce((strongest, ally) => {
-                                if (ally === this) return strongest;
-                                const allyScore = (ally.health / ally.maxHealth) * 100 + 
-                                                (ally.type === 'tank' ? 50 : ally.type === 'soldier' ? 20 : 0);
-                                const strongestScore = strongest ? 
-                                    (strongest.health / strongest.maxHealth) * 100 + 
-                                    (strongest.type === 'tank' ? 50 : strongest.type === 'soldier' ? 20 : 0) : 0;
-                                return allyScore > strongestScore ? ally : strongest;
-                            }, null);
-                            
-                            if (strongestAlly) {
-                                let dx = strongestAlly.x - this.x;
-                                let dy = strongestAlly.y - this.y;
-                                let dist = Math.hypot(dx, dy);
-                                
-                                // Stay at optimal healing distance from the strongest ally
-                                const optimalDistance = this.healRange * 0.6;
-                                
-                                if (dist > optimalDistance + 15) {
-                                    const desiredX = dx / dist;
-                                    const desiredY = dy / dist;
-                                    
-                                    this.velX += (desiredX * this.maxSpeed * 0.5 - this.velX) * this.turnSpeed;
-                                    this.velY += (desiredY * this.maxSpeed * 0.5 - this.velY) * this.turnSpeed;
-                                    this.x += this.velX;
-                                    this.y += this.velY;
+                                    damageTexts.push(new DamageText(
+                                        target.x,
+                                        target.y - target.radius - 10,
+                                        healAmount,
+                                        true
+                                    ));
                                 }
                             }
                         }
-                        
-                        this.currentHealTarget = null;
-                        this.eliteTarget = null;
                     }
                     return;
                 }
@@ -1299,9 +1439,6 @@
                         target.health -= actualDamage;
                         this.lastAttack = now;
                         
-                        // Track damage for healing priority
-                        target.lastHealth = target.health;
-                        
                         damageTexts.push(new DamageText(
                             target.x,
                             target.y - target.radius - 8,
@@ -1318,9 +1455,6 @@
                         ));
                     }
                 }
-                
-                // Update last health for damage tracking
-                this.lastHealth = this.health;
             }
         }
 
@@ -1358,9 +1492,9 @@
                 return;
             }
 
-            if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer") {
+            if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer") {
                 let type = placingMode;
-                let team = x < canvas.width/2 ? 'red' : 'blue';
+                let team = x < canvas.width/2 ? 'red' : 'blue'; // Automatic team assignment
                 
                 let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
                 if (!blocked) {
@@ -1417,9 +1551,15 @@
             showGhost = true;
         };
         
+        document.getElementById("placeMusketeer").onclick = () => {
+            placingMode = "musketeer";
+            showNotification("Placing: Musketeer (Ranged, high damage, 35% miss chance)", 'info');
+            showGhost = true;
+        };
+        
         document.getElementById("placeHealer").onclick = () => {
             placingMode = "healer";
-            showNotification("Placing: Elite Healer (Focuses on highest health teammates!)", 'info');
+            showNotification("Placing: Healer", 'info');
             showGhost = true;
         };
         
@@ -1449,43 +1589,34 @@
             const padding = mapPadding + 30;
             
             // Place red units on the LEFT
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 3; i++) {
                 const x = padding + Math.random() * (canvas.width/2 - padding*1.5);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'red', 'soldier'));
             }
             
             // Place blue units on the RIGHT
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 3; i++) {
                 const x = canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*1.5);
                 const y = padding + Math.random() * (canvas.height - padding*2);
                 circles.push(new Circle(x, y, 'blue', 'soldier'));
             }
             
-            // Add tanks (these will be prioritized by healers!)
+            // Add tanks
             circles.push(new Circle(padding + 20, canvas.height/2, 'red', 'tank'));
             circles.push(new Circle(canvas.width - padding - 20, canvas.height/2, 'blue', 'tank'));
             
-            // Add multiple elite healers to each team
+            // Add healers
             circles.push(new Circle(padding + 40, canvas.height/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 60, canvas.height*2/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 80, canvas.height/2, 'red', 'healer'));
+            circles.push(new Circle(canvas.width - padding - 40, canvas.height*2/3, 'blue', 'healer'));
             
-            circles.push(new Circle(canvas.width - padding - 40, canvas.height/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 60, canvas.height*2/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 80, canvas.height/2, 'blue', 'healer'));
+            // Add musketeers
+            circles.push(new Circle(padding + 60, canvas.height/4, 'red', 'musketeer'));
+            circles.push(new Circle(padding + 80, canvas.height*3/4, 'red', 'musketeer'));
+            circles.push(new Circle(canvas.width - padding - 60, canvas.height/4, 'blue', 'musketeer'));
+            circles.push(new Circle(canvas.width - padding - 80, canvas.height*3/4, 'blue', 'musketeer'));
             
-            // Damage some SOLDIERS to test that healers ignore them
-            circles[0].health = 30; // Damage first red soldier (will be ignored by healers!)
-            circles[1].health = 40; // Damage second red soldier (will be ignored!)
-            circles[6].health = 20; // Damage first blue soldier (will be ignored!)
-            circles[7].health = 50; // Damage second blue soldier (will be ignored!)
-            
-            // But keep tanks at high health (healers will focus on them!)
-            circles[10].health = 180; // Red tank slightly damaged
-            circles[11].health = 190; // Blue tank almost full
-            
-            showNotification('Auto-placed! Elite Healers focus on TANKS & highest health units!', 'info');
+            showNotification('Auto-placed units including Musketeers!', 'info');
         };
 
         function gameLoop() {
@@ -1496,6 +1627,8 @@
             const blueTeam = circles.filter(c => c.team === "blue");
 
             attackEffects = attackEffects.filter(effect => effect.draw());
+            musketEffects = musketEffects.filter(effect => effect.update());
+            musketEffects.forEach(effect => effect.draw());
             healingEffects = healingEffects.filter(effect => effect.update());
             healingEffects.forEach(effect => effect.draw());
             damageTexts = damageTexts.filter(text => text.update());
@@ -1549,6 +1682,7 @@
         function resetGame() {
             circles = [];
             attackEffects = [];
+            musketEffects = [];
             healingEffects = [];
             damageTexts = [];
             gameRunning = false;
@@ -1565,7 +1699,7 @@
         }
 
         // Initialize the game
-        showNotification('Welcome to Neon Battle Simulator with Elite Healers!', 'info');
+        showNotification('Welcome to Neon Battle Simulator with Musketeers!', 'info');
         resizeCanvas();
         gameLoop();
     </script>
