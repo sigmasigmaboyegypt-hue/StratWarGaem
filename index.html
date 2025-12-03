@@ -116,13 +116,13 @@
             flex-direction: column;
         }
 
-        /* Mobile-first Sidebar */
+        /* Mobile-first Sidebar - Simplified */
         .sidebar {
             background: #2d2d2d;
             border-bottom: 1px solid #333;
             padding: 12px;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 12px;
             order: 2;
         }
@@ -149,7 +149,6 @@
         }
 
         .stats-title::before { content: "📊"; }
-        .controls-title::before { content: "🎮"; }
 
         .stat-row {
             display: flex;
@@ -175,25 +174,6 @@
         .green-stat { 
             color: #27ae60; 
             font-weight: 600;
-        }
-
-        .control-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 0;
-            font-size: 0.8rem;
-        }
-
-        .control-item .key {
-            background: #404040;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #ccc;
-            min-width: 40px;
-            text-align: center;
         }
 
         .game-area {
@@ -375,33 +355,6 @@
         .play-again-btn:active {
             transform: translateY(-1px) scale(1.02);
         }
-        
-        /* Battle Log */
-        .battle-log {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            text-align: left;
-        }
-        
-        .battle-log-item {
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: #aaa;
-        }
-        
-        .battle-log-item:last-child {
-            border-bottom: none;
-        }
-        
-        .log-kill { color: #e74c3c; }
-        .log-heal { color: #2ecc71; }
-        .log-miss { color: #95a5a6; }
-        .log-critical { color: #f39c12; }
 
         /* Damage Text Animation */
         .damage-text {
@@ -426,7 +379,7 @@
             }
             
             .sidebar {
-                width: 280px;
+                width: 200px;
                 border-bottom: none;
                 border-right: 1px solid #333;
                 display: flex;
@@ -469,11 +422,6 @@
                 padding: 8px 0;
             }
             
-            .control-item {
-                font-size: 0.85rem;
-                padding: 6px 0;
-            }
-            
             .modal-content {
                 padding: 40px;
             }
@@ -482,7 +430,7 @@
         /* Large Desktop */
         @media (min-width: 1200px) {
             .sidebar {
-                width: 320px;
+                width: 220px;
             }
             
             .header h1 {
@@ -614,33 +562,6 @@
                     <span id="gameStatus">Paused</span>
                 </div>
             </div>
-
-            <div class="sidebar-section">
-                <h3 class="controls-title">Unit Info</h3>
-                <div class="control-item">
-                    <span>🎯 Musketeer:</span>
-                    <span>Long range, high damage</span>
-                </div>
-                <div class="control-item">
-                    <span>Stats:</span>
-                    <span>60HP ⚔️25DMG</span>
-                </div>
-                <div class="control-item">
-                    <span>Special:</span>
-                    <span>35% miss chance</span>
-                </div>
-                <div class="control-item">
-                    <span>Charge:</span>
-                    <span>Bayonet at close range</span>
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <h3 class="controls-title">Battle Log</h3>
-                <div class="battle-log" id="battleLog">
-                    <div class="battle-log-item">Battle log will appear here...</div>
-                </div>
-            </div>
         </div>
 
         <div class="game-area">
@@ -673,7 +594,6 @@
         const notification = document.getElementById("notification");
         const gameOverModal = document.getElementById("gameOverModal");
         const winnerTextEl = document.getElementById("winnerText");
-        const battleLogEl = document.getElementById("battleLog");
         const playAgainHeaderBtn = document.getElementById("playAgainHeaderBtn");
 
         // Stats elements
@@ -718,18 +638,15 @@
         let battleStartTime = 0;
         let battleDuration = 0;
         
-        // NEW: Battle state tracking for Play Again
+        // Battle state tracking for Play Again
         let originalCircles = []; // Saves unit placements before battle starts
-        let battleLog = [];
         let totalKills = 0;
         let highestSingleDamage = 0;
 
         // Map boundaries
         const mapPadding = 20;
-        const COMBAT_RANGE = 5;
-        const HEALER_MAX_DISTANCE = 120;
-        const MUSKET_RANGE = 150; // Musketeer shooting range
-        const BAYONET_RANGE = 60; // When enemies get this close, musketeers charge
+        const MUSKET_RANGE = 150;
+        const BAYONET_RANGE = 60;
 
         // Initialize canvas size
         resizeCanvas();
@@ -753,29 +670,6 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 2500);
-        }
-
-        // Add to battle log
-        function addToBattleLog(message, type = 'info') {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-            const logItem = document.createElement('div');
-            logItem.className = `battle-log-item log-${type}`;
-            logItem.textContent = `[${timeStr}] ${message}`;
-            
-            battleLogEl.insertBefore(logItem, battleLogEl.firstChild);
-            
-            // Keep only last 10 items
-            while (battleLogEl.children.length > 10) {
-                battleLogEl.removeChild(battleLogEl.lastChild);
-            }
-            
-            // Save to array for replay
-            battleLog.push({
-                time: battleDuration,
-                message: message,
-                type: type
-            });
         }
 
         // Enhanced map drawing
@@ -978,7 +872,7 @@
                 this.progress = 0;
                 this.speed = 0.12;
                 this.life = 1.0;
-                this.color = hit ? '#f39c12' : '#95a5a6'; // Orange for hit, gray for miss
+                this.color = hit ? '#f39c12' : '#95a5a6';
             }
             
             update() {
@@ -988,7 +882,6 @@
             }
             
             draw() {
-                // Calculate current position along the line
                 const currentX = this.startX + (this.targetX - this.startX) * this.progress;
                 const currentY = this.startY + (this.targetY - this.startY) * this.progress;
                 
@@ -1037,7 +930,6 @@
             }
             
             draw() {
-                // Calculate current position along the line
                 const currentX = this.startX + (this.targetX - this.startX) * this.progress;
                 const currentY = this.startY + (this.targetY - this.startY) * this.progress;
                 
@@ -1046,7 +938,6 @@
                 ctx.moveTo(this.startX, this.startY);
                 ctx.lineTo(currentX, currentY);
                 
-                // Green healing line with pulsing glow
                 const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.01);
                 ctx.strokeStyle = `rgba(46, 204, 113, ${0.7 * this.life})`;
                 ctx.lineWidth = 4 + pulse;
@@ -1064,7 +955,7 @@
                 ctx.fillStyle = `rgba(46, 204, 113, ${this.life})`;
                 ctx.fill();
                 
-                // Highlight the unit being healed with a green outline
+                // Highlight the unit being healed
                 if (this.healingUnitId && this.progress > 0.8) {
                     const healingUnit = circles.find(c => c.id === this.healingUnitId);
                     if (healingUnit) {
@@ -1154,16 +1045,16 @@
                     this.currentHealTarget = null;
                 } else if (type === 'musketeer') {
                     this.radius = baseUnitSize * 0.9 * sizeMultiplier;
-                    this.health = 60; // Lower health
+                    this.health = 60;
                     this.maxHealth = 60;
-                    this.attackPower = 25; // High damage
-                    this.attackCooldown = 1200; // Slow reload
+                    this.attackPower = 25;
+                    this.attackCooldown = 1200;
                     this.maxSpeed = 1.6 * sizeMultiplier;
                     this.turnSpeed = 0.13;
                     this.shootingRange = MUSKET_RANGE * sizeMultiplier;
                     this.bayonetRange = BAYONET_RANGE * sizeMultiplier;
                     this.isCharging = false;
-                    this.missChance = 0.35; // 35% chance to miss
+                    this.missChance = 0.35;
                     this.lastShot = 0;
                 }
                 
@@ -1349,7 +1240,6 @@
                 if (this.type === 'musketeer') {
                     if (enemies.length === 0) return;
 
-                    // Find closest enemy
                     let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
                     let distToEnemy = this.distanceTo(closestEnemy);
                     
@@ -1365,7 +1255,7 @@
                         if (dist > 0) {
                             const desiredX = dx / dist;
                             const desiredY = dy / dist;
-                            const chargeSpeed = this.maxSpeed * 1.1; // Faster when charging
+                            const chargeSpeed = this.maxSpeed * 1.1;
                             
                             this.velX += (desiredX * chargeSpeed - this.velX) * this.turnSpeed;
                             this.velY += (desiredY * chargeSpeed - this.velY) * this.turnSpeed;
@@ -1378,9 +1268,9 @@
                         if (distToEnemy <= touchDistance) {
                             // Bayonet attack
                             let now = performance.now();
-                            if (now - this.lastAttack >= this.attackCooldown * 0.5) { // Faster attacks in melee
+                            if (now - this.lastAttack >= this.attackCooldown * 0.5) {
                                 const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
-                                const actualDamage = Math.floor(this.attackPower * 0.7 * damageMultiplier); // Reduced damage for bayonet
+                                const actualDamage = Math.floor(this.attackPower * 0.7 * damageMultiplier);
                                 const isCritical = damageMultiplier > 1.5;
                                 
                                 closestEnemy.health -= actualDamage;
@@ -1456,11 +1346,6 @@
                                         this.team,
                                         isCritical
                                     ));
-                                    
-                                    // Log critical hit
-                                    if (isCritical) {
-                                        addToBattleLog(`${this.team} Musketeer CRITICAL HIT! ${actualDamage} damage`, 'critical');
-                                    }
                                 } else {
                                     // MISS - show miss text
                                     damageTexts.push(new DamageText(
@@ -1471,8 +1356,6 @@
                                         false,
                                         true
                                     ));
-                                    
-                                    addToBattleLog(`${this.team} Musketeer missed!`, 'miss');
                                 }
                                 
                                 // Create musket effect
@@ -1502,7 +1385,6 @@
 
                 // HEALER AI - Focus on healing highest health teammates
                 if (this.type === 'healer') {
-                    // Find ally with highest health
                     const healthyAllies = allies.filter(a => a !== this && a.health > 0);
                     
                     if (healthyAllies.length > 0) {
@@ -1554,8 +1436,6 @@
                                         healAmount,
                                         true
                                     ));
-                                    
-                                    addToBattleLog(`${this.team} Healer healed +${healAmount}`, 'heal');
                                 }
                             }
                         }
@@ -1618,11 +1498,6 @@
                             this.team,
                             isCritical
                         ));
-                        
-                        // Log critical hit
-                        if (isCritical) {
-                            addToBattleLog(`${this.team} ${this.type} CRITICAL HIT! ${actualDamage} damage`, 'critical');
-                        }
                     }
                 }
             }
@@ -1639,10 +1514,6 @@
                 maxHealth: circle.maxHealth,
                 radius: circle.radius
             }));
-            
-            // Clear battle log
-            battleLog = [];
-            battleLogEl.innerHTML = '<div class="battle-log-item">Battle log will appear here...</div>';
             
             // Reset stats
             totalKills = 0;
@@ -1672,10 +1543,6 @@
             showGhost = true;
             battleStartTime = 0;
             battleDuration = 0;
-            
-            // Clear battle log for new battle
-            battleLog = [];
-            battleLogEl.innerHTML = '<div class="battle-log-item">Battle log will appear here...</div>';
             
             // Reset stats
             totalKills = 0;
@@ -1733,7 +1600,7 @@
 
             if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer") {
                 let type = placingMode;
-                let team = x < canvas.width/2 ? 'red' : 'blue'; // Automatic team assignment
+                let team = x < canvas.width/2 ? 'red' : 'blue';
                 
                 let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
                 if (!blocked) {
@@ -1825,14 +1692,12 @@
                 battleStartTime = performance.now();
             }
             showNotification("Battle started!", 'info');
-            addToBattleLog('=== BATTLE STARTED ===', 'info');
         };
         
         document.getElementById("pauseBtn").onclick = () => {
             gameRunning = false;
             showGhost = true;
             showNotification("Battle paused", 'warning');
-            addToBattleLog('Battle paused', 'warning');
         };
 
         document.getElementById("autoPlaceBtn").onclick = () => {
@@ -1906,18 +1771,6 @@
                 // Check if unit just died
                 if (c.health <= 0 && c.lastHealth > 0) {
                     totalKills++;
-                    const killer = circles.find(other => 
-                        other !== c && 
-                        other.team !== c.team &&
-                        other.totalDamageDealt > 0
-                    );
-                    
-                    if (killer) {
-                        killer.kills++;
-                        addToBattleLog(`${killer.team} ${killer.type} killed ${c.team} ${c.type}`, 'kill');
-                    } else {
-                        addToBattleLog(`${c.team} ${c.type} was eliminated`, 'kill');
-                    }
                 }
                 c.lastHealth = c.health;
             }
@@ -1950,10 +1803,6 @@
                     totalKillsEl.textContent = totalKills;
                     highestDamageEl.textContent = highestSingleDamage;
                     
-                    // Add victory to battle log
-                    addToBattleLog(`=== ${winner.toUpperCase()} TEAM VICTORY! ===`, winner === 'red' ? 'critical' : 'info');
-                    addToBattleLog(`Battle time: ${battleDuration}s | Kills: ${totalKills}`, 'info');
-                    
                     gameOverModal.style.display = 'flex';
                     
                     // Show play again button in header
@@ -1966,13 +1815,8 @@
             requestAnimationFrame(gameLoop);
         }
 
-        function closeModal() {
-            gameOverModal.style.display = 'none';
-        }
-
         // Initialize the game
         showNotification('Welcome to Neon Battle Simulator with Musketeers! Place units then click Start.', 'info');
-        addToBattleLog('Welcome! Place units and click Start to begin battle.', 'info');
         resizeCanvas();
         gameLoop();
     </script>
