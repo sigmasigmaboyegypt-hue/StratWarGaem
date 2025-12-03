@@ -105,6 +105,8 @@
         .pause-btn:hover{ background: #f4d03f; }
         .auto-btn{ background: #9b59b6; }
         .auto-btn:hover{ background: #af7ac5; }
+        .play-again-header-btn{ background: #1abc9c; }
+        .play-again-header-btn:hover{ background: #48c9b0; }
 
         .main-container {
             display: flex;
@@ -251,7 +253,7 @@
             background: #3498db;
         }
 
-        /* Modern Modal */
+        /* Modern Modal - Simplified for Play Again */
         .modal {
             display: none;
             position: fixed;
@@ -269,77 +271,137 @@
         
         .modal-content {
             background: #2d2d2d;
-            padding: 24px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 16px;
             text-align: center;
             width: 100%;
-            max-width: 400px;
-            border: 1px solid #404040;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            max-width: 500px;
+            border: 3px solid #404040;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         
         .modal h2 { 
-            font-size: 1.8rem; 
-            margin-bottom: 16px; 
+            font-size: 2.2rem; 
+            margin-bottom: 20px; 
             color: #fff;
-            font-weight: 700;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
         
         .winner-text {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: bold;
-            margin: 16px 0;
-            padding: 14px;
-            border-radius: 8px;
-            background: #363636;
-            border: 2px solid;
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #363636, #2d2d2d);
+            border: 3px solid;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
         .winner-red { 
-            color: #e74c3c; 
-            border-color: #e74c3c;
+            color: #ff6b6b; 
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.1));
+            text-shadow: 0 2px 10px rgba(231, 76, 60, 0.5);
         }
         
         .winner-blue { 
-            color: #3498db; 
-            border-color: #3498db;
+            color: #74b9ff; 
+            border-color: #74b9ff;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.1));
+            text-shadow: 0 2px 10px rgba(52, 152, 219, 0.5);
         }
         
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
+        #battleStats {
+            margin: 25px 0;
+            font-size: 1.2rem;
+            color: #ccc;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            line-height: 1.8;
         }
         
-        .modal-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
+        #battleStats span {
+            font-weight: 700;
             color: #fff;
         }
         
+        /* Single Play Again Button */
+        .play-again-container {
+            margin-top: 30px;
+        }
+        
         .play-again-btn {
-            background: #27ae60;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            max-width: 300px;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 0 auto;
         }
         
         .play-again-btn:hover {
-            background: #2ecc71;
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(46, 204, 113, 0.6);
         }
         
-        .close-modal-btn {
-            background: #7f8c8d;
+        .play-again-btn:active {
+            transform: translateY(-1px) scale(1.02);
         }
         
-        .close-modal-btn:hover {
-            background: #95a5a6;
-            transform: translateY(-2px);
+        /* Battle Log */
+        .battle-log {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            text-align: left;
         }
+        
+        .battle-log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+        
+        .battle-log-item:last-child {
+            border-bottom: none;
+        }
+        
+        .log-kill { color: #e74c3c; }
+        .log-heal { color: #2ecc71; }
+        .log-miss { color: #95a5a6; }
+        .log-critical { color: #f39c12; }
 
         /* Damage Text Animation */
         .damage-text {
@@ -411,6 +473,10 @@
                 font-size: 0.85rem;
                 padding: 6px 0;
             }
+            
+            .modal-content {
+                padding: 40px;
+            }
         }
 
         /* Large Desktop */
@@ -449,6 +515,16 @@
             .sidebar-section {
                 padding: 8px;
             }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .winner-text {
+                font-size: 1.4rem;
+                padding: 15px;
+                margin: 15px 0;
+            }
         }
 
         /* Touch device optimizations */
@@ -474,6 +550,20 @@
             .start-btn:active{ background: #2ecc71; }
             .pause-btn:active{ background: #f4d03f; }
             .auto-btn:active{ background: #af7ac5; }
+            .play-again-header-btn:active{ background: #48c9b0; }
+            
+            .play-again-btn {
+                padding: 22px 40px;
+            }
+            
+            .play-again-btn:hover {
+                transform: none;
+            }
+            
+            .play-again-btn:active {
+                transform: scale(0.98);
+                background: linear-gradient(135deg, #2ecc71, #27ae60);
+            }
         }
     </style>
 </head>
@@ -492,6 +582,7 @@
                 <button class="start-btn" id="startBtn">▶️ Start</button>
                 <button class="pause-btn" id="pauseBtn">⏸️ Pause</button>
                 <button class="auto-btn" id="autoPlaceBtn">🤖 Auto</button>
+                <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
             </div>
         </div>
     </div>
@@ -543,6 +634,13 @@
                     <span>Bayonet at close range</span>
                 </div>
             </div>
+            
+            <div class="sidebar-section">
+                <h3 class="controls-title">Battle Log</h3>
+                <div class="battle-log" id="battleLog">
+                    <div class="battle-log-item">Battle log will appear here...</div>
+                </div>
+            </div>
         </div>
 
         <div class="game-area">
@@ -550,17 +648,21 @@
         </div>
     </div>
 
+    <!-- Simplified Victory Modal with only Play Again button -->
     <div class="modal" id="gameOverModal">
         <div class="modal-content">
-            <h2>🏆 Victory!</h2>
+            <h2>🏆 VICTORY!</h2>
             <div id="winnerText" class="winner-text">Red Team Victory!</div>
             <div id="battleStats" style="margin: 16px 0; font-size: 1rem; color: #ccc;">
                 ⏱️ Battle lasted: <span id="finalTime">0</span> seconds<br>
-                👥 Remaining units: <span id="remainingUnits">0</span>
+                👥 Remaining units: <span id="remainingUnits">0</span><br>
+                ⚔️ Total kills: <span id="totalKills">0</span><br>
+                💥 Highest damage: <span id="highestDamage">0</span>
             </div>
-            <div class="modal-buttons">
-                <button class="modal-btn play-again-btn" onclick="resetGame()">🔄 Play Again</button>
-                <button class="modal-btn close-modal-btn" onclick="closeModal()">❌ Close</button>
+            <div class="play-again-container">
+                <button class="play-again-btn" onclick="playAgain()">
+                    🔄 PLAY AGAIN
+                </button>
             </div>
         </div>
     </div>
@@ -571,6 +673,8 @@
         const notification = document.getElementById("notification");
         const gameOverModal = document.getElementById("gameOverModal");
         const winnerTextEl = document.getElementById("winnerText");
+        const battleLogEl = document.getElementById("battleLog");
+        const playAgainHeaderBtn = document.getElementById("playAgainHeaderBtn");
 
         // Stats elements
         const redCountEl = document.getElementById("redCount");
@@ -580,6 +684,8 @@
         const gameStatusEl = document.getElementById("gameStatus");
         const finalTimeEl = document.getElementById("finalTime");
         const remainingUnitsEl = document.getElementById("remainingUnits");
+        const totalKillsEl = document.getElementById("totalKills");
+        const highestDamageEl = document.getElementById("highestDamage");
 
         // Set canvas size to fit available space
         function resizeCanvas() {
@@ -611,6 +717,12 @@
         let baseUnitSize = 20;
         let battleStartTime = 0;
         let battleDuration = 0;
+        
+        // NEW: Battle state tracking for Play Again
+        let originalCircles = []; // Saves unit placements before battle starts
+        let battleLog = [];
+        let totalKills = 0;
+        let highestSingleDamage = 0;
 
         // Map boundaries
         const mapPadding = 20;
@@ -641,6 +753,29 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 2500);
+        }
+
+        // Add to battle log
+        function addToBattleLog(message, type = 'info') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            const logItem = document.createElement('div');
+            logItem.className = `battle-log-item log-${type}`;
+            logItem.textContent = `[${timeStr}] ${message}`;
+            
+            battleLogEl.insertBefore(logItem, battleLogEl.firstChild);
+            
+            // Keep only last 10 items
+            while (battleLogEl.children.length > 10) {
+                battleLogEl.removeChild(battleLogEl.lastChild);
+            }
+            
+            // Save to array for replay
+            battleLog.push({
+                time: battleDuration,
+                message: message,
+                type: type
+            });
         }
 
         // Enhanced map drawing
@@ -1039,6 +1174,8 @@
                 this.id = Math.random().toString(36).substr(2, 9);
                 this.facingAngle = 0;
                 this.lastHealth = this.health;
+                this.totalDamageDealt = 0;
+                this.kills = 0;
             }
 
             draw() {
@@ -1248,6 +1385,12 @@
                                 
                                 closestEnemy.health -= actualDamage;
                                 this.lastAttack = now;
+                                this.totalDamageDealt += actualDamage;
+                                
+                                // Track highest damage
+                                if (actualDamage > highestSingleDamage) {
+                                    highestSingleDamage = actualDamage;
+                                }
                                 
                                 damageTexts.push(new DamageText(
                                     closestEnemy.x,
@@ -1291,6 +1434,13 @@
                                     const isCritical = damageMultiplier > 1.5;
                                     
                                     closestEnemy.health -= actualDamage;
+                                    this.totalDamageDealt += actualDamage;
+                                    this.lastShot = now;
+                                    
+                                    // Track highest damage
+                                    if (actualDamage > highestSingleDamage) {
+                                        highestSingleDamage = actualDamage;
+                                    }
                                     
                                     damageTexts.push(new DamageText(
                                         closestEnemy.x,
@@ -1306,6 +1456,11 @@
                                         this.team,
                                         isCritical
                                     ));
+                                    
+                                    // Log critical hit
+                                    if (isCritical) {
+                                        addToBattleLog(`${this.team} Musketeer CRITICAL HIT! ${actualDamage} damage`, 'critical');
+                                    }
                                 } else {
                                     // MISS - show miss text
                                     damageTexts.push(new DamageText(
@@ -1316,6 +1471,8 @@
                                         false,
                                         true
                                     ));
+                                    
+                                    addToBattleLog(`${this.team} Musketeer missed!`, 'miss');
                                 }
                                 
                                 // Create musket effect
@@ -1397,6 +1554,8 @@
                                         healAmount,
                                         true
                                     ));
+                                    
+                                    addToBattleLog(`${this.team} Healer healed +${healAmount}`, 'heal');
                                 }
                             }
                         }
@@ -1438,6 +1597,12 @@
                         
                         target.health -= actualDamage;
                         this.lastAttack = now;
+                        this.totalDamageDealt += actualDamage;
+                        
+                        // Track highest damage
+                        if (actualDamage > highestSingleDamage) {
+                            highestSingleDamage = actualDamage;
+                        }
                         
                         damageTexts.push(new DamageText(
                             target.x,
@@ -1453,9 +1618,81 @@
                             this.team,
                             isCritical
                         ));
+                        
+                        // Log critical hit
+                        if (isCritical) {
+                            addToBattleLog(`${this.team} ${this.type} CRITICAL HIT! ${actualDamage} damage`, 'critical');
+                        }
                     }
                 }
             }
+        }
+
+        // Save original unit placements before battle starts
+        function saveOriginalPlacements() {
+            originalCircles = circles.map(circle => ({
+                x: circle.x,
+                y: circle.y,
+                team: circle.team,
+                type: circle.type,
+                health: circle.maxHealth,
+                maxHealth: circle.maxHealth,
+                radius: circle.radius
+            }));
+            
+            // Clear battle log
+            battleLog = [];
+            battleLogEl.innerHTML = '<div class="battle-log-item">Battle log will appear here...</div>';
+            
+            // Reset stats
+            totalKills = 0;
+            highestSingleDamage = 0;
+            
+            showNotification('Unit placements saved! Ready for battle.', 'info');
+        }
+
+        // Restore original placements for Play Again
+        function restoreOriginalPlacements() {
+            circles = [];
+            attackEffects = [];
+            musketEffects = [];
+            healingEffects = [];
+            damageTexts = [];
+            
+            // Restore each unit with full health
+            originalCircles.forEach(original => {
+                const circle = new Circle(original.x, original.y, original.team, original.type);
+                circle.health = original.maxHealth;
+                circle.maxHealth = original.maxHealth;
+                circles.push(circle);
+            });
+            
+            // Reset game state
+            gameRunning = false;
+            showGhost = true;
+            battleStartTime = 0;
+            battleDuration = 0;
+            
+            // Clear battle log for new battle
+            battleLog = [];
+            battleLogEl.innerHTML = '<div class="battle-log-item">Battle log will appear here...</div>';
+            
+            // Reset stats
+            totalKills = 0;
+            highestSingleDamage = 0;
+            
+            // Show header play again button
+            playAgainHeaderBtn.style.display = 'none';
+            
+            showNotification('Battle reset! Place units or start battle.', 'info');
+        }
+
+        // Play Again function (like TABS)
+        function playAgain() {
+            gameOverModal.style.display = 'none';
+            restoreOriginalPlacements();
+            placingMode = "soldier";
+            showNotification('Units restored! Ready for another battle.', 'info');
         }
 
         // Touch and mouse event handling
@@ -1481,6 +1718,8 @@
         }
 
         function handleCanvasClick(x, y) {
+            if (gameRunning) return; // Don't place units during battle
+            
             const radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
             const withinBounds = x > mapPadding + radius && 
                                x < canvas.width - mapPadding - radius &&
@@ -1570,18 +1809,30 @@
         };
         
         document.getElementById("startBtn").onclick = () => {
+            if (circles.length === 0) {
+                showNotification('Place some units first!', 'warning');
+                return;
+            }
+            
+            // Save original placements before starting battle
+            if (!gameRunning && battleStartTime === 0) {
+                saveOriginalPlacements();
+            }
+            
             gameRunning = true;
             showGhost = false;
             if (battleStartTime === 0) {
                 battleStartTime = performance.now();
             }
             showNotification("Battle started!", 'info');
+            addToBattleLog('=== BATTLE STARTED ===', 'info');
         };
         
         document.getElementById("pauseBtn").onclick = () => {
             gameRunning = false;
             showGhost = true;
             showNotification("Battle paused", 'warning');
+            addToBattleLog('Battle paused', 'warning');
         };
 
         document.getElementById("autoPlaceBtn").onclick = () => {
@@ -1618,6 +1869,11 @@
             
             showNotification('Auto-placed units including Musketeers!', 'info');
         };
+        
+        // Header Play Again button
+        playAgainHeaderBtn.onclick = () => {
+            playAgain();
+        };
 
         function gameLoop() {
             drawMap();
@@ -1634,6 +1890,9 @@
             damageTexts = damageTexts.filter(text => text.update());
             damageTexts.forEach(text => text.draw());
 
+            // Track unit deaths
+            const previousCount = circles.length;
+            
             for (let c of circles) {
                 let allies = circles.filter(x => x.team === c.team && x.health > 0);
                 let enemies = circles.filter(x => x.team !== c.team && x.health > 0);
@@ -1643,6 +1902,24 @@
                 }
                 
                 c.draw();
+                
+                // Check if unit just died
+                if (c.health <= 0 && c.lastHealth > 0) {
+                    totalKills++;
+                    const killer = circles.find(other => 
+                        other !== c && 
+                        other.team !== c.team &&
+                        other.totalDamageDealt > 0
+                    );
+                    
+                    if (killer) {
+                        killer.kills++;
+                        addToBattleLog(`${killer.team} ${killer.type} killed ${c.team} ${c.type}`, 'kill');
+                    } else {
+                        addToBattleLog(`${c.team} ${c.type} was eliminated`, 'kill');
+                    }
+                }
+                c.lastHealth = c.health;
             }
 
             circles = circles.filter(c => c.health > 0);
@@ -1670,28 +1947,23 @@
                     
                     finalTimeEl.textContent = battleDuration;
                     remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
+                    totalKillsEl.textContent = totalKills;
+                    highestDamageEl.textContent = highestSingleDamage;
+                    
+                    // Add victory to battle log
+                    addToBattleLog(`=== ${winner.toUpperCase()} TEAM VICTORY! ===`, winner === 'red' ? 'critical' : 'info');
+                    addToBattleLog(`Battle time: ${battleDuration}s | Kills: ${totalKills}`, 'info');
                     
                     gameOverModal.style.display = 'flex';
-                    showNotification(`${winner === 'red' ? 'Red' : 'Blue'} team wins!`, 'info');
+                    
+                    // Show play again button in header
+                    playAgainHeaderBtn.style.display = 'flex';
+                    
+                    showNotification(`${winner === 'red' ? 'Red' : 'Blue'} team wins! Click Play Again to restart.`, 'info');
                 }
             }
             
             requestAnimationFrame(gameLoop);
-        }
-
-        function resetGame() {
-            circles = [];
-            attackEffects = [];
-            musketEffects = [];
-            healingEffects = [];
-            damageTexts = [];
-            gameRunning = false;
-            showGhost = true;
-            battleStartTime = 0;
-            battleDuration = 0;
-            gameOverModal.style.display = 'none';
-            placingMode = "soldier";
-            showNotification('Game reset. Ready to place units.', 'info');
         }
 
         function closeModal() {
@@ -1699,7 +1971,8 @@
         }
 
         // Initialize the game
-        showNotification('Welcome to Neon Battle Simulator with Musketeers!', 'info');
+        showNotification('Welcome to Neon Battle Simulator with Musketeers! Place units then click Start.', 'info');
+        addToBattleLog('Welcome! Place units and click Start to begin battle.', 'info');
         resizeCanvas();
         gameLoop();
     </script>
