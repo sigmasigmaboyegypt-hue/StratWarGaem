@@ -396,7 +396,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Neon Battle Simulator - Complete</h1>
+        <h1>Neon Battle Simulator</h1>
         <div class="button-groups">
             <div class="button-row">
                 <button class="soldier-btn" id="placeSoldier">👤 Soldier</button>
@@ -415,7 +415,7 @@
         </div>
     </div>
 
-    <div class="notification" id="notification">Placing: Soldier</div>
+    <div class="notification" id="notification">Click to place units</div>
 
     <div class="main-container">
         <div class="sidebar">
@@ -534,7 +534,7 @@
             
             notification.classList.add('show');
             
-            setTimeout(() => notification.classList.remove('show'), 2500);
+            setTimeout(() => notification.classList.remove('show'), 2000);
         }
 
         function drawMap() {
@@ -867,8 +867,6 @@
                     if (canCharge && !this.isCharging) {
                         this.isCharging = true; this.chargeStartTime = now; this.chargeTarget = closestEnemy; this.lastCharge = now;
                         this.chargeBoost = 1.0;
-                        if (!this.hasUsedFirstCharge) showNotification(`${this.team === 'red' ? '🔴 Red' : '🔵 Blue'} Cavalry FIRST CHARGE!`, 'info');
-                        else showNotification(`${this.team === 'red' ? '🔴 Red' : '🔵 Blue'} Cavalry is charging!`, 'info');
                     }
                     
                     if (this.isCharging) {
@@ -901,7 +899,7 @@
                                     if (finalDamage > highestSingleDamage) highestSingleDamage = finalDamage;
                                     damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, finalDamage, false, isCritical || !this.hasUsedFirstCharge));
                                     attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, true));
-                                    if (!this.hasUsedFirstCharge) { this.hasUsedFirstCharge = true; showNotification(`${this.team === 'red' ? '🔴 Red' : '🔵 Blue'} Cavalry FIRST CHARGE HIT! +50% damage!`, 'info'); }
+                                    if (!this.hasUsedFirstCharge) this.hasUsedFirstCharge = true;
                                     this.isCharging = false; this.chargeBoost = 0; this.chargeTarget = null;
                                 }
                             }
@@ -1036,9 +1034,6 @@
                                     const healEffect = new HealingEffect(this.x, this.y, target.x, target.y, healAmount);
                                     healEffect.healingUnitId = target.id; healingEffects.push(healEffect);
                                     damageTexts.push(new DamageText(target.x, target.y - target.radius - 10, healAmount, true));
-                                    if (target.health / target.maxHealth < 0.3) {
-                                        showNotification(`${this.team === 'red' ? '🔴 Red' : '🔵 Blue'} Healer saving ${target.type}!`, 'info');
-                                    }
                                 }
                             }
                         }
@@ -1098,7 +1093,6 @@
                 hasUsedFirstCharge: circle.type === 'cavalry' ? circle.hasUsedFirstCharge : undefined
             }));
             totalKills = 0; highestSingleDamage = 0;
-            showNotification('Unit placements saved! Ready for battle.', 'info');
         }
 
         function restoreOriginalPlacements() {
@@ -1114,10 +1108,9 @@
             });
             gameRunning = false; showGhost = true; battleStartTime = 0; battleDuration = 0;
             totalKills = 0; highestSingleDamage = 0; playAgainHeaderBtn.style.display = 'none';
-            showNotification('Battle reset! Place units or start battle.', 'info');
         }
 
-        function playAgain() { gameOverModal.style.display = 'none'; restoreOriginalPlacements(); placingMode = "soldier"; showNotification('Units restored! Ready for another battle.', 'info'); }
+        function playAgain() { gameOverModal.style.display = 'none'; restoreOriginalPlacements(); placingMode = "soldier"; showNotification('Game reset', 'info'); }
 
         function getCanvasMousePos(event) {
             const rect = canvas.getBoundingClientRect();
@@ -1133,12 +1126,12 @@
             if (gameRunning) return;
             const radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
             const withinBounds = x > mapPadding + radius && x < canvas.width - mapPadding - radius && y > mapPadding + radius && y < canvas.height - mapPadding - radius;
-            if (!withinBounds) { showNotification('Cannot place outside battlefield!', 'warning'); return; }
+            if (!withinBounds) { showNotification('Cannot place outside battlefield', 'warning'); return; }
 
             if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer" || placingMode === "cavalry") {
                 let type = placingMode; let team = x < canvas.width/2 ? 'red' : 'blue';
                 let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
-                if (!blocked) { circles.push(new Circle(x, y, team, type)); showNotification(`Placed ${type} on ${team} team${type === 'cavalry' ? ' - READY TO CHARGE!' : ''}`, 'info'); }
+                if (!blocked) { circles.push(new Circle(x, y, team, type)); showNotification(`${type} placed`, 'info'); }
                 else showNotification('Space occupied', 'warning');
             } else if (placingMode === "delete") {
                 const beforeCount = circles.length;
@@ -1154,16 +1147,16 @@
 
         document.getElementById("placeSoldier").onclick = () => { placingMode = "soldier"; showNotification("Placing: Soldier", 'info'); showGhost = true; };
         document.getElementById("placeTank").onclick = () => { placingMode = "tank"; showNotification("Placing: Tank", 'info'); showGhost = true; };
-        document.getElementById("placeMusketeer").onclick = () => { placingMode = "musketeer"; showNotification("Placing: Musketeer (Ranged, 35% miss chance)", 'info'); showGhost = true; };
-        document.getElementById("placeHealer").onclick = () => { placingMode = "healer"; showNotification("Placing: Healer (Heals damaged teammates)", 'info'); showGhost = true; };
-        document.getElementById("placeCavalry").onclick = () => { placingMode = "cavalry"; showNotification("Placing: Cavalry (INSTANT FIRST CHARGE!)", 'info'); showGhost = true; };
-        document.getElementById("deleteTool").onclick = () => { placingMode = "delete"; showNotification("Delete Tool Active", 'warning'); showGhost = false; };
+        document.getElementById("placeMusketeer").onclick = () => { placingMode = "musketeer"; showNotification("Placing: Musketeer", 'info'); showGhost = true; };
+        document.getElementById("placeHealer").onclick = () => { placingMode = "healer"; showNotification("Placing: Healer", 'info'); showGhost = true; };
+        document.getElementById("placeCavalry").onclick = () => { placingMode = "cavalry"; showNotification("Placing: Cavalry", 'info'); showGhost = true; };
+        document.getElementById("deleteTool").onclick = () => { placingMode = "delete"; showNotification("Delete Tool", 'warning'); showGhost = false; };
         document.getElementById("startBtn").onclick = () => {
-            if (circles.length === 0) { showNotification('Place some units first!', 'warning'); return; }
+            if (circles.length === 0) { showNotification('Place units first', 'warning'); return; }
             if (!gameRunning && battleStartTime === 0) saveOriginalPlacements();
             gameRunning = true; showGhost = false;
             if (battleStartTime === 0) battleStartTime = performance.now();
-            showNotification("Battle started!", 'info');
+            showNotification("Battle started", 'info');
         };
         document.getElementById("pauseBtn").onclick = () => { gameRunning = false; showGhost = true; showNotification("Battle paused", 'warning'); };
         document.getElementById("autoPlaceBtn").onclick = () => {
@@ -1191,7 +1184,7 @@
             circles.push(new Circle(canvas.width - padding - 160, canvas.height/5, 'blue', 'cavalry'));
             circles.push(new Circle(canvas.width - padding - 180, canvas.height*4/5, 'blue', 'cavalry'));
             
-            showNotification('Auto-placed balanced armies! (24 units total)', 'info');
+            showNotification('Auto-placed armies', 'info');
         };
         playAgainHeaderBtn.onclick = () => { playAgain(); };
 
@@ -1229,13 +1222,13 @@
                     finalTimeEl.textContent = battleDuration; remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
                     totalKillsEl.textContent = totalKills; highestDamageEl.textContent = highestSingleDamage;
                     gameOverModal.style.display = 'flex'; playAgainHeaderBtn.style.display = 'flex';
-                    showNotification(`${winner === 'red' ? 'Red' : 'Blue'} team wins! Click Play Again to restart.`, 'info');
+                    showNotification(`${winner === 'red' ? 'Red' : 'Blue'} wins!`, 'info');
                 }
             }
             requestAnimationFrame(gameLoop);
         }
 
-        showNotification('Neon Battle Simulator Complete! Place units then click Start.', 'info');
+        showNotification('Click to place units', 'info');
         resizeCanvas(); gameLoop();
     </script>
 </body>
