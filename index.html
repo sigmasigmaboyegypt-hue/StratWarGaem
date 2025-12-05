@@ -46,35 +46,38 @@
 
         .header h1::before { content: "⚔️"; font-size: 1.4rem; }
 
-        .button-groups { 
-            display: flex; 
-            gap: 12px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            align-items: center;
-        }
-        
-        .button-group-container {
+        .header-controls {
             display: flex;
-            gap: 8px;
             flex-wrap: wrap;
-            justify-content: center;
-            border-right: 1px solid #444;
-            padding-right: 12px;
+            gap: 12px;
+            justify-content: flex-end;
+            flex: 1;
         }
-        
-        .button-group-container:last-child {
-            border-right: none;
-            padding-right: 0;
+
+        .unit-controls, .game-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
         }
-        
-        .button-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .unit-controls {
+            border: 1px solid #444;
+            padding: 6px;
+        }
+
+        .game-controls {
+            border: 1px solid #444;
+            padding: 6px;
+        }
 
         .header button { 
             background: #404040;
             border: none;
             padding: 10px 14px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -87,6 +90,7 @@
             gap: 6px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             touch-action: manipulation;
+            white-space: nowrap;
         }
 
         .header button:hover { 
@@ -108,10 +112,15 @@
         .special-btn:hover { background: #5dade2; }
         .cavalry-btn { background: #8e44ad; }
         .cavalry-btn:hover { background: #9b59b6; }
+        
         .control-btn { background: #27ae60; }
         .control-btn:hover { background: #2ecc71; }
-        .control-btn.pause { background: #f39c12; }
+        .control-btn.pause { 
+            background: #f39c12; 
+            color: white;
+        }
         .control-btn.pause:hover { background: #f4d03f; }
+        
         .danger-btn { background: #e67e22; }
         .danger-btn:hover { background: #eb984e; }
         .delete-all-btn { background: #c0392b; }
@@ -373,6 +382,20 @@
             .header h1 { font-size: 1.6rem; }
         }
 
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .header-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .unit-controls, .game-controls {
+                justify-content: center;
+            }
+        }
+
         @media (max-height: 500px) and (orientation: landscape) {
             .header { padding: 8px 12px; min-height: 50px; }
             .header h1 { font-size: 1.1rem; }
@@ -427,27 +450,24 @@
 <body>
     <div class="header">
         <h1>Neon Battle Simulator</h1>
-        <div class="button-groups">
-            <!-- Unit Selection Buttons -->
-            <div class="button-group-container">
-                <div class="button-row">
-                    <button class="unit-btn active" id="placeSoldier" data-type="soldier">👤 Soldier</button>
-                    <button class="special-btn" id="placeTank" data-type="tank">🛡️ Tank</button>
-                    <button class="special-btn" id="placeMusketeer" data-type="musketeer">🎯 Musketeer</button>
-                    <button class="special-btn" id="placeHealer" data-type="healer">❤️ Healer</button>
-                    <button class="cavalry-btn" id="placeCavalry" data-type="cavalry">🐎 Cavalry</button>
-                </div>
+        
+        <div class="header-controls">
+            <!-- Unit Selection Buttons - SEPARATED GROUP -->
+            <div class="unit-controls">
+                <button class="unit-btn active" id="placeSoldier" data-type="soldier">👤 Soldier</button>
+                <button class="special-btn" id="placeTank" data-type="tank">🛡️ Tank</button>
+                <button class="special-btn" id="placeMusketeer" data-type="musketeer">🎯 Musketeer</button>
+                <button class="special-btn" id="placeHealer" data-type="healer">❤️ Healer</button>
+                <button class="cavalry-btn" id="placeCavalry" data-type="cavalry">🐎 Cavalry</button>
             </div>
             
-            <!-- Control Buttons -->
-            <div class="button-group-container">
-                <div class="button-row">
-                    <button class="danger-btn" id="deleteTool">🗑️ Delete</button>
-                    <button class="delete-all-btn" id="deleteAllBtn">🔥 Delete All</button>
-                    <button class="control-btn" id="startPauseBtn">▶️ Start</button>
-                    <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
-                    <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
-                </div>
+            <!-- Game Control Buttons - SEPARATED GROUP -->
+            <div class="game-controls">
+                <button class="danger-btn" id="deleteTool">🗑️ Delete</button>
+                <button class="delete-all-btn" id="deleteAllBtn">🔥 Delete All</button>
+                <button class="control-btn" id="startPauseBtn">▶️ Start</button>
+                <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
+                <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
             </div>
         </div>
     </div>
@@ -564,7 +584,7 @@
 
         // Update active button styling
         function updateActiveButton() {
-            document.querySelectorAll('.unit-btn, .special-btn, .cavalry-btn').forEach(btn => {
+            document.querySelectorAll('.unit-controls button').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.type === placingMode) {
                     btn.classList.add('active');
@@ -1215,11 +1235,9 @@
             if (gameRunning) {
                 startPauseBtn.innerHTML = '⏸️ Pause';
                 startPauseBtn.classList.add('pause');
-                startPauseBtn.classList.remove('control-btn');
             } else {
                 startPauseBtn.innerHTML = '▶️ Start';
                 startPauseBtn.classList.remove('pause');
-                startPauseBtn.classList.add('control-btn');
             }
         }
 
@@ -1258,13 +1276,15 @@
         canvas.addEventListener("touchstart", e => { e.preventDefault(); const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); }, { passive: false });
 
         // Unit buttons
-        document.querySelectorAll('#placeSoldier, #placeTank, #placeMusketeer, #placeHealer, #placeCavalry').forEach(btn => {
-            btn.onclick = () => { 
-                placingMode = btn.dataset.type; 
-                showNotification(`Placing: ${btn.textContent.replace(/[^a-zA-Z]/g, '')}`, 'info'); 
-                showGhost = true; 
-                updateActiveButton();
-            };
+        document.querySelectorAll('.unit-controls button').forEach(btn => {
+            if (btn.dataset.type) {
+                btn.onclick = () => { 
+                    placingMode = btn.dataset.type; 
+                    showNotification(`Placing: ${btn.textContent.replace(/[^a-zA-Z]/g, '')}`, 'info'); 
+                    showGhost = true; 
+                    updateActiveButton();
+                };
+            }
         });
 
         // Control buttons
