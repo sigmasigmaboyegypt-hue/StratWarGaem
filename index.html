@@ -46,7 +46,28 @@
 
         .header h1::before { content: "⚔️"; font-size: 1.4rem; }
 
-        .button-groups { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .button-groups { 
+            display: flex; 
+            gap: 12px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        .button-group-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-right: 1px solid #444;
+            padding-right: 12px;
+        }
+        
+        .button-group-container:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+        
         .button-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .header button { 
@@ -75,22 +96,30 @@
         }
         .header button:active { transform: translateY(0); }
 
-        .soldier-btn{ background: #e74c3c; }
-        .soldier-btn:hover{ background: #ec7063; }
-        .special-btn{ background: #3498db; }
-        .special-btn:hover{ background: #5dade2; }
-        .cavalry-btn{ background: #8e44ad; }
-        .cavalry-btn:hover{ background: #9b59b6; }
-        .delete-btn{ background: #e67e22; }
-        .delete-btn:hover{ background: #eb984e; }
-        .start-btn{ background: #27ae60; }
-        .start-btn:hover{ background: #2ecc71; }
-        .pause-btn{ background: #f39c12; }
-        .pause-btn:hover{ background: #f4d03f; }
-        .auto-btn{ background: #9b59b6; }
-        .auto-btn:hover{ background: #af7ac5; }
-        .play-again-header-btn{ background: #1abc9c; }
-        .play-again-header-btn:hover{ background: #48c9b0; }
+        .unit-btn { background: #e74c3c; }
+        .unit-btn:hover { background: #ec7063; }
+        .unit-btn.active { 
+            background: #c0392b; 
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+            transform: translateY(0);
+        }
+        
+        .special-btn { background: #3498db; }
+        .special-btn:hover { background: #5dade2; }
+        .cavalry-btn { background: #8e44ad; }
+        .cavalry-btn:hover { background: #9b59b6; }
+        .control-btn { background: #27ae60; }
+        .control-btn:hover { background: #2ecc71; }
+        .control-btn.pause { background: #f39c12; }
+        .control-btn.pause:hover { background: #f4d03f; }
+        .danger-btn { background: #e67e22; }
+        .danger-btn:hover { background: #eb984e; }
+        .delete-all-btn { background: #c0392b; }
+        .delete-all-btn:hover { background: #e74c3c; }
+        .auto-btn { background: #9b59b6; }
+        .auto-btn:hover { background: #af7ac5; }
+        .play-again-header-btn { background: #1abc9c; }
+        .play-again-header-btn:hover { background: #48c9b0; }
 
         .main-container {
             display: flex;
@@ -370,12 +399,13 @@
                 transform: scale(0.98);
             }
             
-            .soldier-btn:active{ background: #ec7063; }
+            .unit-btn:active{ background: #ec7063; }
             .special-btn:active{ background: #5dade2; }
             .cavalry-btn:active{ background: #9b59b6; }
-            .delete-btn:active{ background: #eb984e; }
-            .start-btn:active{ background: #2ecc71; }
-            .pause-btn:active{ background: #f4d03f; }
+            .control-btn:active{ background: #2ecc71; }
+            .control-btn.pause:active{ background: #f4d03f; }
+            .danger-btn:active{ background: #eb984e; }
+            .delete-all-btn:active{ background: #e74c3c; }
             .auto-btn:active{ background: #af7ac5; }
             .play-again-header-btn:active{ background: #48c9b0; }
             
@@ -398,19 +428,26 @@
     <div class="header">
         <h1>Neon Battle Simulator</h1>
         <div class="button-groups">
-            <div class="button-row">
-                <button class="soldier-btn" id="placeSoldier">👤 Soldier</button>
-                <button class="special-btn" id="placeTank">🛡️ Tank</button>
-                <button class="special-btn" id="placeMusketeer">🎯 Musketeer</button>
-                <button class="special-btn" id="placeHealer">❤️ Healer</button>
-                <button class="cavalry-btn" id="placeCavalry">🐎 Cavalry</button>
+            <!-- Unit Selection Buttons -->
+            <div class="button-group-container">
+                <div class="button-row">
+                    <button class="unit-btn active" id="placeSoldier" data-type="soldier">👤 Soldier</button>
+                    <button class="special-btn" id="placeTank" data-type="tank">🛡️ Tank</button>
+                    <button class="special-btn" id="placeMusketeer" data-type="musketeer">🎯 Musketeer</button>
+                    <button class="special-btn" id="placeHealer" data-type="healer">❤️ Healer</button>
+                    <button class="cavalry-btn" id="placeCavalry" data-type="cavalry">🐎 Cavalry</button>
+                </div>
             </div>
-            <div class="button-row">
-                <button class="delete-btn" id="deleteTool">🗑️ Delete</button>
-                <button class="start-btn" id="startBtn">▶️ Start</button>
-                <button class="pause-btn" id="pauseBtn">⏸️ Pause</button>
-                <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
-                <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
+            
+            <!-- Control Buttons -->
+            <div class="button-group-container">
+                <div class="button-row">
+                    <button class="danger-btn" id="deleteTool">🗑️ Delete</button>
+                    <button class="delete-all-btn" id="deleteAllBtn">🔥 Delete All</button>
+                    <button class="control-btn" id="startPauseBtn">▶️ Start</button>
+                    <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
+                    <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
+                </div>
             </div>
         </div>
     </div>
@@ -474,6 +511,7 @@
         const gameOverModal = document.getElementById("gameOverModal");
         const winnerTextEl = document.getElementById("winnerText");
         const playAgainHeaderBtn = document.getElementById("playAgainHeaderBtn");
+        const startPauseBtn = document.getElementById("startPauseBtn");
 
         const redCountEl = document.getElementById("redCount");
         const blueCountEl = document.getElementById("blueCount");
@@ -523,6 +561,16 @@
 
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+
+        // Update active button styling
+        function updateActiveButton() {
+            document.querySelectorAll('.unit-btn, .special-btn, .cavalry-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === placingMode) {
+                    btn.classList.add('active');
+                }
+            });
+        }
 
         function showNotification(message, type = 'info') {
             notification.textContent = message;
@@ -588,7 +636,7 @@
             
             let color, radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
             let team = mouseX < canvas.width/2 ? "red" : "blue";
-            let type = "soldier";
+            let type = placingMode;
             
             if (placingMode === "soldier") { type = "soldier"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; }
             else if (placingMode === "tank") { type = "tank"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; radius = baseUnitSize * 1.3 * (Math.min(canvas.width, canvas.height) / 800); }
@@ -782,9 +830,14 @@
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = gradient; ctx.fill();
                 
                 if (this.type === 'healer') {
-                    ctx.beginPath(); ctx.moveTo(this.x - this.radius/2, this.y); ctx.lineTo(this.x + this.radius/2, this.y);
-                    ctx.moveTo(this.x, this.y - this.radius/2); ctx.lineTo(this.x, this.y + this.radius/2);
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - this.radius/2, this.y);
+                    ctx.lineTo(this.x + this.radius/2, this.y);
+                    ctx.moveTo(this.x, this.y - this.radius/2);
+                    ctx.lineTo(this.x, this.y + this.radius/2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 } else if (this.type === 'musketeer') {
                     ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.facingAngle);
                     ctx.beginPath(); ctx.moveTo(-this.radius, 0); ctx.lineTo(this.radius, 0);
@@ -994,27 +1047,65 @@
                     return;
                 }
 
-                // HEALER AI - FIXED! Heals most damaged teammates, not other healers
+                // IMPROVED HEALER AI - Much smarter!
                 if (this.type === 'healer') {
-                    // Find most damaged ally that needs healing (< 80% health)
-                    let mostDamagedAlly = null;
-                    let lowestHealthPercent = 1.0;
+                    // Find allies that need healing (prioritize combat units, not other healers)
+                    let healingCandidates = [];
                     
                     for (let ally of allies) {
                         if (ally === this || ally.health <= 0) continue;
+                        
+                        // Calculate healing priority score
+                        let priority = 0;
                         const healthPercent = ally.health / ally.maxHealth;
-                        // Only heal if below 80% health AND is most damaged
-                        if (healthPercent < 0.8 && healthPercent < lowestHealthPercent) {
-                            lowestHealthPercent = healthPercent;
-                            mostDamagedAlly = ally;
+                        
+                        // Base priority: lower health = higher priority
+                        priority += (1 - healthPercent) * 100;
+                        
+                        // Combat unit bonus (don't prioritize other healers)
+                        if (ally.type !== 'healer') {
+                            priority += 50; // Combat units get bonus priority
+                            
+                            // Tank bonus (high value unit)
+                            if (ally.type === 'tank') priority += 30;
+                            
+                            // Cavalry bonus (mobile unit)
+                            if (ally.type === 'cavalry') priority += 20;
+                            
+                            // Check if ally is actively engaged in combat
+                            const closeEnemies = enemies.filter(e => this.distanceTo(e) < 100);
+                            if (closeEnemies.length > 0) {
+                                priority += 40; // Bonus for units in combat
+                            }
+                        } else {
+                            // Penalize healing other healers (only heal them if they're critically low)
+                            priority -= 80;
+                        }
+                        
+                        // Distance penalty (closer is better)
+                        const distance = this.distanceTo(ally);
+                        priority -= distance * 0.5;
+                        
+                        // Only add if they need healing (< 90% health)
+                        if (healthPercent < 0.9) {
+                            healingCandidates.push({
+                                ally: ally,
+                                priority: priority,
+                                healthPercent: healthPercent,
+                                distance: distance
+                            });
                         }
                     }
                     
-                    if (mostDamagedAlly) {
-                        let target = mostDamagedAlly;
+                    // Sort by priority (highest first)
+                    healingCandidates.sort((a, b) => b.priority - a.priority);
+                    
+                    if (healingCandidates.length > 0) {
+                        let target = healingCandidates[0].ally;
                         let distToTarget = this.distanceTo(target);
                         
                         if (distToTarget > this.healRange + 5) {
+                            // Move toward target
                             let dx = target.x - this.x, dy = target.y - this.y;
                             let dist = Math.hypot(dx, dy);
                             if (dist > 0) {
@@ -1025,6 +1116,7 @@
                                 this.x += this.velX; this.y += this.velY;
                             }
                         } else {
+                            // Within healing range, slow down and heal
                             this.velX *= 0.8; this.velY *= 0.8;
                             let now = performance.now();
                             if (now - this.lastHeal >= this.healCooldown) {
@@ -1038,19 +1130,25 @@
                             }
                         }
                     } else {
-                        // No one needs healing, stay safe behind allies
+                        // No one needs healing, stay safe behind the front lines
                         if (allies.length > 1) {
-                            let avgX = 0, avgY = 0;
-                            allies.forEach(ally => { if (ally !== this) { avgX += ally.x; avgY += ally.y; } });
-                            avgX /= (allies.length - 1); avgY /= (allies.length - 1);
-                            let dx = avgX - this.x, dy = avgY - this.y;
-                            let dist = Math.hypot(dx, dy);
-                            if (dist > this.healRange * 0.5) {
-                                const desiredX = dx / dist; const desiredY = dy / dist;
-                                this.velX += (desiredX * this.maxSpeed * 0.4 - this.velX) * this.turnSpeed;
-                                this.velY += (desiredY * this.maxSpeed * 0.4 - this.velY) * this.turnSpeed;
+                            // Find average position of combat units (excluding healers)
+                            let combatAllies = allies.filter(a => a !== this && a.type !== 'healer');
+                            if (combatAllies.length > 0) {
+                                let avgX = 0, avgY = 0;
+                                combatAllies.forEach(ally => { avgX += ally.x; avgY += ally.y; });
+                                avgX /= combatAllies.length; avgY /= combatAllies.length;
+                                
+                                // Move to a safe position behind the combat units
+                                let dx = avgX - this.x, dy = avgY - this.y;
+                                let dist = Math.hypot(dx, dy);
+                                if (dist > this.healRange * 0.7) {
+                                    const desiredX = dx / dist; const desiredY = dy / dist;
+                                    this.velX += (desiredX * this.maxSpeed * 0.4 - this.velX) * this.turnSpeed;
+                                    this.velY += (desiredY * this.maxSpeed * 0.4 - this.velY) * this.turnSpeed;
+                                }
+                                this.x += this.velX; this.y += this.velY;
                             }
-                            this.x += this.velX; this.y += this.velY;
                         }
                     }
                     return;
@@ -1108,9 +1206,22 @@
             });
             gameRunning = false; showGhost = true; battleStartTime = 0; battleDuration = 0;
             totalKills = 0; highestSingleDamage = 0; playAgainHeaderBtn.style.display = 'none';
+            updateStartPauseButton();
         }
 
-        function playAgain() { gameOverModal.style.display = 'none'; restoreOriginalPlacements(); placingMode = "soldier"; showNotification('Game reset', 'info'); }
+        function playAgain() { gameOverModal.style.display = 'none'; restoreOriginalPlacements(); placingMode = "soldier"; updateActiveButton(); showNotification('Game reset', 'info'); }
+
+        function updateStartPauseButton() {
+            if (gameRunning) {
+                startPauseBtn.innerHTML = '⏸️ Pause';
+                startPauseBtn.classList.add('pause');
+                startPauseBtn.classList.remove('control-btn');
+            } else {
+                startPauseBtn.innerHTML = '▶️ Start';
+                startPauseBtn.classList.remove('pause');
+                startPauseBtn.classList.add('control-btn');
+            }
+        }
 
         function getCanvasMousePos(event) {
             const rect = canvas.getBoundingClientRect();
@@ -1140,27 +1251,67 @@
             }
         }
 
+        // Event Listeners
         canvas.addEventListener("mousemove", e => { const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; });
         canvas.addEventListener("click", e => { const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); });
         canvas.addEventListener("touchmove", e => { e.preventDefault(); const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; }, { passive: false });
         canvas.addEventListener("touchstart", e => { e.preventDefault(); const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); }, { passive: false });
 
-        document.getElementById("placeSoldier").onclick = () => { placingMode = "soldier"; showNotification("Placing: Soldier", 'info'); showGhost = true; };
-        document.getElementById("placeTank").onclick = () => { placingMode = "tank"; showNotification("Placing: Tank", 'info'); showGhost = true; };
-        document.getElementById("placeMusketeer").onclick = () => { placingMode = "musketeer"; showNotification("Placing: Musketeer", 'info'); showGhost = true; };
-        document.getElementById("placeHealer").onclick = () => { placingMode = "healer"; showNotification("Placing: Healer", 'info'); showGhost = true; };
-        document.getElementById("placeCavalry").onclick = () => { placingMode = "cavalry"; showNotification("Placing: Cavalry", 'info'); showGhost = true; };
-        document.getElementById("deleteTool").onclick = () => { placingMode = "delete"; showNotification("Delete Tool", 'warning'); showGhost = false; };
-        document.getElementById("startBtn").onclick = () => {
-            if (circles.length === 0) { showNotification('Place units first', 'warning'); return; }
-            if (!gameRunning && battleStartTime === 0) saveOriginalPlacements();
-            gameRunning = true; showGhost = false;
-            if (battleStartTime === 0) battleStartTime = performance.now();
-            showNotification("Battle started", 'info');
+        // Unit buttons
+        document.querySelectorAll('#placeSoldier, #placeTank, #placeMusketeer, #placeHealer, #placeCavalry').forEach(btn => {
+            btn.onclick = () => { 
+                placingMode = btn.dataset.type; 
+                showNotification(`Placing: ${btn.textContent.replace(/[^a-zA-Z]/g, '')}`, 'info'); 
+                showGhost = true; 
+                updateActiveButton();
+            };
+        });
+
+        // Control buttons
+        document.getElementById("deleteTool").onclick = () => { 
+            placingMode = "delete"; 
+            showNotification("Delete Tool", 'warning'); 
+            showGhost = false; 
+            updateActiveButton();
         };
-        document.getElementById("pauseBtn").onclick = () => { gameRunning = false; showGhost = true; showNotification("Battle paused", 'warning'); };
+        
+        document.getElementById("deleteAllBtn").onclick = () => {
+            if (circles.length > 0) {
+                circles = [];
+                showNotification('All units deleted', 'warning');
+            } else {
+                showNotification('No units to delete', 'info');
+            }
+        };
+        
+        document.getElementById("startPauseBtn").onclick = () => {
+            if (circles.length === 0) { 
+                showNotification('Place units first', 'warning'); 
+                return; 
+            }
+            
+            if (!gameRunning) {
+                // Start game
+                if (battleStartTime === 0) saveOriginalPlacements();
+                gameRunning = true; 
+                showGhost = false;
+                if (battleStartTime === 0) battleStartTime = performance.now();
+                showNotification("Battle started", 'info');
+                gameStatusEl.textContent = "Running";
+            } else {
+                // Pause game
+                gameRunning = false; 
+                showGhost = true; 
+                showNotification("Battle paused", 'warning');
+                gameStatusEl.textContent = "Paused";
+            }
+            
+            updateStartPauseButton();
+        };
+        
         document.getElementById("autoPlaceBtn").onclick = () => {
-            circles = []; const padding = mapPadding + 30;
+            circles = []; 
+            const padding = mapPadding + 30;
             
             // Red Team - Balanced composition
             for (let i = 0; i < 4; i++) circles.push(new Circle(padding + Math.random() * (canvas.width/2 - padding*2), padding + Math.random() * (canvas.height - padding*2), 'red', 'soldier'));
@@ -1186,16 +1337,22 @@
             
             showNotification('Auto-placed armies', 'info');
         };
+        
         playAgainHeaderBtn.onclick = () => { playAgain(); };
 
         function gameLoop() {
-            drawMap(); drawGhost();
+            drawMap(); 
+            drawGhost();
+            
             const redTeam = circles.filter(c => c.team === "red");
             const blueTeam = circles.filter(c => c.team === "blue");
             attackEffects = attackEffects.filter(effect => effect.draw());
-            musketEffects = musketEffects.filter(effect => effect.update()); musketEffects.forEach(effect => effect.draw());
-            healingEffects = healingEffects.filter(effect => effect.update()); healingEffects.forEach(effect => effect.draw());
-            damageTexts = damageTexts.filter(text => text.update()); damageTexts.forEach(text => text.draw());
+            musketEffects = musketEffects.filter(effect => effect.update()); 
+            musketEffects.forEach(effect => effect.draw());
+            healingEffects = healingEffects.filter(effect => effect.update()); 
+            healingEffects.forEach(effect => effect.draw());
+            damageTexts = damageTexts.filter(text => text.update()); 
+            damageTexts.forEach(text => text.draw());
 
             for (let c of circles) {
                 let allies = circles.filter(x => x.team === c.team && x.health > 0);
@@ -1209,27 +1366,37 @@
             circles = circles.filter(c => c.health > 0);
             const redAlive = circles.filter(c => c.team === "red" && c.health > 0);
             const blueAlive = circles.filter(c => c.team === "blue" && c.health > 0);
-            redCountEl.textContent = redAlive.length; blueCountEl.textContent = blueAlive.length;
-            totalCountEl.textContent = circles.length; gameStatusEl.textContent = gameRunning ? "Running" : "Paused";
+            redCountEl.textContent = redAlive.length; 
+            blueCountEl.textContent = blueAlive.length;
+            totalCountEl.textContent = circles.length; 
             
             if (gameRunning) {
                 battleDuration = Math.floor((performance.now() - battleStartTime) / 1000);
                 battleTimeEl.textContent = battleDuration + 's';
                 if (redAlive.length === 0 || blueAlive.length === 0) {
-                    gameRunning = false; const winner = redAlive.length > 0 ? 'red' : 'blue';
+                    gameRunning = false; 
+                    const winner = redAlive.length > 0 ? 'red' : 'blue';
                     winnerTextEl.textContent = `${winner === 'red' ? '🔴 Red' : '🔵 Blue'} Team Victory!`;
                     winnerTextEl.className = `winner-text ${winner === 'red' ? 'winner-red' : 'winner-blue'}`;
-                    finalTimeEl.textContent = battleDuration; remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
-                    totalKillsEl.textContent = totalKills; highestDamageEl.textContent = highestSingleDamage;
-                    gameOverModal.style.display = 'flex'; playAgainHeaderBtn.style.display = 'flex';
+                    finalTimeEl.textContent = battleDuration; 
+                    remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
+                    totalKillsEl.textContent = totalKills; 
+                    highestDamageEl.textContent = highestSingleDamage;
+                    gameOverModal.style.display = 'flex'; 
+                    playAgainHeaderBtn.style.display = 'flex';
                     showNotification(`${winner === 'red' ? 'Red' : 'Blue'} wins!`, 'info');
+                    updateStartPauseButton();
                 }
             }
             requestAnimationFrame(gameLoop);
         }
 
+        // Initialize
         showNotification('Click to place units', 'info');
-        resizeCanvas(); gameLoop();
+        resizeCanvas(); 
+        gameLoop();
+        updateActiveButton();
+        updateStartPauseButton();
     </script>
 </body>
 </html>
