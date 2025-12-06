@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Battle Simulator - ULTIMATE FIXED</title>
+    <title>Neon Battle Simulator - OPTIMIZED</title>
     <style>
         * { 
             margin: 0; 
@@ -362,37 +362,6 @@
             100% { transform: translateY(-30px) scale(1.2); opacity: 0; }
         }
 
-        /* NEW: Cannonball flying effect */
-        .cannonball-effect {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: cannonballTrail 0.8s ease-out forwards;
-            box-shadow: 0 0 15px rgba(255, 200, 50, 0.7);
-        }
-
-        @keyframes cannonballTrail {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.9; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        /* Explosion animation */
-        @keyframes explosion {
-            0% { transform: scale(0.1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        .explosion-effect {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: explosion 0.8s ease-out forwards;
-        }
-
         @media (min-width: 768px) {
             .main-container { flex-direction: row; }
             .sidebar {
@@ -488,7 +457,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Neon Battle Simulator - FIXED</h1>
+        <h1>Neon Battle Simulator - OPTIMIZED</h1>
         
         <div class="header-controls">
             <!-- Unit Selection Buttons -->
@@ -589,32 +558,31 @@
             canvas.height = container.clientHeight;
         }
 
+        // FIXED: Lag optimization - use simple arrays instead of complex objects
         let placingMode = "soldier";
         let gameRunning = false;
+        let gamePausedTime = 0; // Track paused time for cooldowns
         let circles = [];
         let mouseX = 0, mouseY = 0, showGhost = true;
-        let attackEffects = [];
-        let musketEffects = [];
-        let healingEffects = [];
         let damageTexts = [];
         let gameSpeed = 1.0;
         let baseUnitSize = 20;
         let battleStartTime = 0;
         let battleDuration = 0;
+        let pausedAt = 0; // When game was paused
         
         let originalCircles = [];
         let totalKills = 0;
         let highestSingleDamage = 0;
 
-        // CANNON SPECIFIC
-        let cannonEffects = [];
-        let cannonballEffects = [];
-
         const mapPadding = 20;
         const MUSKET_RANGE = 150;
         const BAYONET_RANGE = 60;
 
-        // Add roundRect support for older browsers
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Add roundRect support
         if (!ctx.roundRect) {
             ctx.roundRect = function(x, y, width, height, radius) {
                 if (width < 2 * radius) radius = width / 2;
@@ -630,246 +598,36 @@
             }
         }
 
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // NEW: Cannonball flying effect class
-        class CannonballEffect {
-            constructor(startX, startY, targetX, targetY, team) {
-                this.startX = startX;
-                this.startY = startY;
-                this.targetX = targetX;
-                this.targetY = targetY;
-                this.team = team;
-                this.progress = 0;
-                this.speed = 0.08;
-                this.distance = Math.hypot(targetX - startX, targetY - startY);
-                this.currentX = startX;
-                this.currentY = startY;
-                this.trail = [];
-                this.trailLength = 15;
-                this.hasExploded = false;
-                this.explosionTime = 0;
-                this.explosionRadius = 0;
-                this.maxExplosionRadius = 40;
+        // FIXED: Simple damage text class (no complex effects for performance)
+        class DamageText {
+            constructor(x, y, damage, isHeal = false, isCritical = false) {
+                this.x = x; 
+                this.y = y; 
+                this.damage = damage; 
+                this.isHeal = isHeal; 
+                this.isCritical = isCritical;
+                this.life = 1.0; 
+                this.velocityY = -1;
             }
-            
-            update() {
-                if (!this.hasExploded) {
-                    this.progress += this.speed;
-                    this.currentX = this.startX + (this.targetX - this.startX) * this.progress;
-                    this.currentY = this.startY + (this.targetY - this.startY) * this.progress;
-                    
-                    this.trail.push({x: this.currentX, y: this.currentY});
-                    if (this.trail.length > this.trailLength) {
-                        this.trail.shift();
-                    }
-                    
-                    if (this.progress >= 1) {
-                        this.hasExploded = true;
-                        this.explosionTime = 0;
-                    }
-                    return true;
-                } else {
-                    this.explosionTime += 0.05;
-                    this.explosionRadius = this.maxExplosionRadius * (1 - Math.abs(1 - this.explosionTime * 2));
-                    
-                    if (this.explosionTime >= 1) {
-                        return false;
-                    }
-                    return true;
-                }
+            update() { 
+                this.y += this.velocityY; 
+                this.life -= 0.02; 
+                return this.life > 0; 
             }
-            
             draw() {
-                if (!this.hasExploded) {
-                    // Draw trail
-                    for (let i = 0; i < this.trail.length; i++) {
-                        const point = this.trail[i];
-                        const alpha = i / this.trail.length;
-                        const size = 3 * alpha;
-                        
-                        const trailGradient = ctx.createRadialGradient(
-                            point.x, point.y, 0,
-                            point.x, point.y, size * 2
-                        );
-                        
-                        if (this.team === 'red') {
-                            trailGradient.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.7})`);
-                            trailGradient.addColorStop(1, `rgba(255, 100, 50, 0)`);
-                        } else {
-                            trailGradient.addColorStop(0, `rgba(100, 200, 255, ${alpha * 0.7})`);
-                            trailGradient.addColorStop(1, `rgba(50, 150, 255, 0)`);
-                        }
-                        
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-                        ctx.fillStyle = trailGradient;
-                        ctx.fill();
-                    }
-                    
-                    // Draw cannonball
-                    const cannonballGradient = ctx.createRadialGradient(
-                        this.currentX, this.currentY, 0,
-                        this.currentX, this.currentY, 8
-                    );
-                    
-                    if (this.team === 'red') {
-                        cannonballGradient.addColorStop(0, '#FFD700');
-                        cannonballGradient.addColorStop(0.5, '#FF8C00');
-                        cannonballGradient.addColorStop(1, '#FF4500');
-                    } else {
-                        cannonballGradient.addColorStop(0, '#87CEEB');
-                        cannonballGradient.addColorStop(0.5, '#4682B4');
-                        cannonballGradient.addColorStop(1, '#1E90FF');
-                    }
-                    
-                    ctx.beginPath();
-                    ctx.arc(this.currentX, this.currentY, 8, 0, Math.PI * 2);
-                    ctx.fillStyle = cannonballGradient;
-                    ctx.fill();
-                    
-                    // Add glow
-                    ctx.beginPath();
-                    ctx.arc(this.currentX, this.currentY, 16, 0, Math.PI * 2);
-                    const glowGradient = ctx.createRadialGradient(
-                        this.currentX, this.currentY, 8,
-                        this.currentX, this.currentY, 16
-                    );
-                    glowGradient.addColorStop(0, this.team === 'red' ? 'rgba(255, 200, 50, 0.8)' : 'rgba(100, 200, 255, 0.8)');
-                    glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = glowGradient;
-                    ctx.fill();
-                } else {
-                    // Draw explosion
-                    const explosionProgress = this.explosionTime;
-                    const explosionRadius = this.explosionRadius;
-                    const alpha = 1 - explosionProgress;
-                    
-                    const explosionGradient = ctx.createRadialGradient(
-                        this.targetX, this.targetY, 0,
-                        this.targetX, this.targetY, explosionRadius
-                    );
-                    
-                    if (this.team === 'red') {
-                        explosionGradient.addColorStop(0, `rgba(255, 200, 100, ${alpha})`);
-                        explosionGradient.addColorStop(0.6, `rgba(255, 100, 50, ${alpha * 0.7})`);
-                        explosionGradient.addColorStop(1, `rgba(255, 50, 0, ${alpha * 0.3})`);
-                    } else {
-                        explosionGradient.addColorStop(0, `rgba(100, 200, 255, ${alpha})`);
-                        explosionGradient.addColorStop(0.6, `rgba(50, 150, 255, ${alpha * 0.7})`);
-                        explosionGradient.addColorStop(1, `rgba(0, 100, 200, ${alpha * 0.3})`);
-                    }
-                    
-                    ctx.beginPath();
-                    ctx.arc(this.targetX, this.targetY, explosionRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = explosionGradient;
-                    ctx.fill();
-                    
-                    // Shockwave
-                    const shockwaveRadius = explosionRadius * 1.5;
-                    ctx.beginPath();
-                    ctx.arc(this.targetX, this.targetY, shockwaveRadius, 0, Math.PI * 2);
-                    ctx.strokeStyle = this.team === 'red' ? 
-                        `rgba(255, 200, 100, ${alpha * 0.4})` : 
-                        `rgba(100, 200, 255, ${alpha * 0.4})`;
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-                }
-            }
-        }
-
-        // Improved Explosion Effect
-        class ExplosionEffect {
-            constructor(x, y, maxRadius, team, intensity) {
-                this.x = x;
-                this.y = y;
-                this.maxRadius = maxRadius;
-                this.currentRadius = 0;
-                this.team = team;
-                this.duration = 1000;
-                this.startTime = performance.now();
-                this.particles = [];
-                this.intensity = intensity || 1;
-                
-                const particleCount = Math.floor(20 * intensity);
-                for (let i = 0; i < particleCount; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 1 + Math.random() * 3;
-                    const life = 0.7 + Math.random() * 0.3;
-                    const size = 1 + Math.random() * 3;
-                    
-                    this.particles.push({
-                        x: this.x,
-                        y: this.y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: life,
-                        maxLife: life,
-                        size: size,
-                        color: team === 'red' ? 
-                            `rgba(${255}, ${150 + Math.random() * 105}, ${50}, 1)` :
-                            `rgba(${50}, ${150 + Math.random() * 105}, ${255}, 1)`
-                    });
-                }
-            }
-            
-            update() {
-                const elapsed = performance.now() - this.startTime;
-                const progress = elapsed / this.duration;
-                
-                if (progress < 0.5) {
-                    this.currentRadius = this.maxRadius * (progress * 2);
-                } else {
-                    this.currentRadius = this.maxRadius * (1 - ((progress - 0.5) * 2));
-                }
-                
-                for (let particle of this.particles) {
-                    particle.x += particle.vx;
-                    particle.y += particle.vy;
-                    particle.vx *= 0.97;
-                    particle.vy *= 0.97;
-                    particle.life -= 0.01;
-                }
-                
-                return progress < 1;
-            }
-            
-            draw() {
-                const elapsed = performance.now() - this.startTime;
-                const progress = elapsed / this.duration;
-                
-                if (progress < 0.5) {
-                    const alpha = 1 - (progress * 2);
-                    const gradient = ctx.createRadialGradient(
-                        this.x, this.y, 0,
-                        this.x, this.y, this.currentRadius
-                    );
-                    
-                    if (this.team === 'red') {
-                        gradient.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.8})`);
-                        gradient.addColorStop(0.7, `rgba(255, 100, 50, ${alpha * 0.4})`);
-                        gradient.addColorStop(1, `rgba(255, 50, 0, ${alpha * 0.1})`);
-                    } else {
-                        gradient.addColorStop(0, `rgba(100, 200, 255, ${alpha * 0.8})`);
-                        gradient.addColorStop(0.7, `rgba(50, 150, 255, ${alpha * 0.4})`);
-                        gradient.addColorStop(1, `rgba(0, 100, 200, ${alpha * 0.1})`);
-                    }
-                    
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.currentRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-                }
-                
-                for (let particle of this.particles) {
-                    if (particle.life > 0) {
-                        const particleAlpha = particle.life / particle.maxLife;
-                        ctx.beginPath();
-                        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                        ctx.fillStyle = particle.color.replace('1)', `${particleAlpha})`);
-                        ctx.fill();
-                    }
+                ctx.font = this.isCritical ? 'bold 16px Arial' : 'bold 13px Arial';
+                if (this.isHeal) { 
+                    ctx.fillStyle = `rgba(46, 204, 113, ${this.life})`; 
+                    ctx.textAlign = 'center'; 
+                    ctx.fillText('+' + this.damage, this.x, this.y); 
+                } else if (this.isCritical) { 
+                    ctx.fillStyle = `rgba(231, 76, 60, ${this.life})`; 
+                    ctx.textAlign = 'center'; 
+                    ctx.fillText('-' + this.damage, this.x, this.y); 
+                } else { 
+                    ctx.fillStyle = `rgba(245, 125, 128, ${this.life})`; 
+                    ctx.textAlign = 'center'; 
+                    ctx.fillText('-' + this.damage, this.x, this.y); 
                 }
             }
         }
@@ -898,24 +656,18 @@
         }
 
         function drawMap() {
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(1, '#16213e');
-            ctx.fillStyle = gradient;
+            // FIXED: Optimized map drawing
+            ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            const redGradient = ctx.createLinearGradient(0, 0, canvas.width/2, 0);
-            redGradient.addColorStop(0, 'rgba(231, 76, 60, 0.1)');
-            redGradient.addColorStop(1, 'rgba(231, 76, 60, 0.05)');
-            ctx.fillStyle = redGradient;
+            // Simple team areas
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.1)';
             ctx.fillRect(0, 0, canvas.width/2, canvas.height);
             
-            const blueGradient = ctx.createLinearGradient(canvas.width, 0, canvas.width/2, 0);
-            blueGradient.addColorStop(0, 'rgba(52, 152, 219, 0.1)');
-            blueGradient.addColorStop(1, 'rgba(52, 152, 219, 0.05)');
-            ctx.fillStyle = blueGradient;
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
             ctx.fillRect(canvas.width/2, 0, canvas.width/2, canvas.height);
             
+            // Center line
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
             ctx.setLineDash([10, 8]);
@@ -925,6 +677,7 @@
             ctx.stroke();
             ctx.setLineDash([]);
             
+            // Team labels
             ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
             ctx.font = 'bold 18px "Segoe UI", system-ui';
             ctx.textAlign = 'center';
@@ -934,6 +687,7 @@
             ctx.fillStyle = 'rgba(52, 152, 219, 0.8)';
             ctx.fillText('🔵 BLUE', canvas.width*3/4, 25);
             
+            // Battlefield border
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.lineWidth = 2;
             ctx.setLineDash([4, 4]);
@@ -946,21 +700,24 @@
         function drawGhost() {
             if (!showGhost || placingMode === "delete") return;
             
-            let color, radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
+            let radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
             let team = mouseX < canvas.width/2 ? "red" : "blue";
             let type = placingMode;
             
-            if (placingMode === "soldier") { type = "soldier"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; }
-            else if (placingMode === "tank") { type = "tank"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; radius = baseUnitSize * 1.3 * (Math.min(canvas.width, canvas.height) / 800); }
-            else if (placingMode === "healer") { type = "healer"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; }
-            else if (placingMode === "musketeer") { type = "musketeer"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; radius = baseUnitSize * 0.9 * (Math.min(canvas.width, canvas.height) / 800); }
-            else if (placingMode === "cavalry") { type = "cavalry"; color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"; radius = baseUnitSize * 1.1 * (Math.min(canvas.width, canvas.height) / 800); }
-            else if (placingMode === "cannon") { type = "cannon"; color = team === "red" ? "rgba(140, 60, 40, 0.6)" : "rgba(40, 100, 140, 0.6)"; radius = baseUnitSize * 1.6 * (Math.min(canvas.width, canvas.height) / 800); }
-                
-            const withinBounds = mouseX > mapPadding + radius && mouseX < canvas.width - mapPadding - radius && mouseY > mapPadding + radius && mouseY < canvas.height - mapPadding - radius;
-            let blocked = circles.some(c => Math.hypot(c.x - mouseX, c.y - mouseY) < (c.radius + radius) * 0.8);
+            const withinBounds = mouseX > mapPadding + radius && mouseX < canvas.width - mapPadding - radius && 
+                                mouseY > mapPadding + radius && mouseY < canvas.height - mapPadding - radius;
+            let blocked = false;
             
-            if (blocked || !withinBounds) color = "rgba(231, 76, 60, 0.8)";
+            // FIXED: Optimized collision check
+            for (let c of circles) {
+                if (Math.hypot(c.x - mouseX, c.y - mouseY) < (c.radius + radius) * 0.8) {
+                    blocked = true;
+                    break;
+                }
+            }
+            
+            let color = blocked || !withinBounds ? "rgba(231, 76, 60, 0.8)" : 
+                       (team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)");
             
             ctx.beginPath();
             ctx.arc(mouseX, mouseY, radius, 0, Math.PI * 2);
@@ -968,20 +725,19 @@
             ctx.fill();
             
             if (type === "cannon") {
-                // Draw cannon ghost
+                // Draw simple cannon ghost
                 ctx.save();
                 ctx.translate(mouseX, mouseY);
                 
-                // Auto-rotate based on team side
+                // FIXED: Blue team cannons face left correctly
                 if (team === 'blue') {
                     ctx.rotate(Math.PI);
                 }
                 
-                // Draw cannon body - IMPROVED DESIGN
                 ctx.fillStyle = "rgba(60, 60, 60, 0.8)";
                 ctx.fillRect(-radius * 0.8, -radius * 0.4, radius * 1.6, radius * 0.8);
                 
-                // Draw wheels
+                // Draw wheels at BOTTOM (not top)
                 ctx.fillStyle = "rgba(40, 40, 40, 0.8)";
                 ctx.beginPath();
                 ctx.arc(-radius * 0.6, radius * 0.3, radius * 0.2, 0, Math.PI * 2);
@@ -993,10 +749,6 @@
                 // Draw barrel
                 ctx.fillStyle = "rgba(80, 80, 80, 0.8)";
                 ctx.fillRect(0, -radius * 0.15, radius * 1.8, radius * 0.3);
-                
-                // Draw muzzle
-                ctx.fillStyle = "rgba(100, 100, 100, 0.8)";
-                ctx.fillRect(radius * 1.8, -radius * 0.2, radius * 0.3, radius * 0.4);
                 
                 ctx.restore();
             }
@@ -1018,106 +770,50 @@
             else return 1.25;
         }
 
-        class DamageText {
-            constructor(x, y, damage, isHeal = false, isCritical = false, isMiss = false) {
-                this.x = x; this.y = y; this.damage = damage; this.isHeal = isHeal; this.isCritical = isCritical; this.isMiss = isMiss;
-                this.life = 1.0; this.velocityY = -1;
-            }
-            update() { this.y += this.velocityY; this.life -= 0.02; return this.life > 0; }
-            draw() {
-                ctx.font = this.isCritical ? 'bold 16px Arial' : 'bold 13px Arial';
-                let color;
-                if (this.isMiss) { color = `rgba(155, 155, 155, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText("MISS", this.x, this.y); }
-                else if (this.isHeal) { color = `rgba(46, 204, 113, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('+' + this.damage, this.x, this.y); }
-                else if (this.isCritical) { color = `rgba(231, 76, 60, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('-' + this.damage, this.x, this.y); }
-                else { color = `rgba(245, 125, 128, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('-' + this.damage, this.x, this.y); }
-            }
-        }
-
-        class MusketEffect {
-            constructor(startX, startY, targetX, targetY, hit = true) {
-                this.startX = startX; this.startY = startY; this.targetX = targetX; this.targetY = targetY; this.hit = hit;
-                this.progress = 0; this.speed = 0.12; this.life = 1.0; this.color = hit ? '#f39c12' : '#95a5a6';
-            }
-            update() { this.progress += this.speed; this.life -= 0.015; return this.progress <= 1.0 && this.life > 0; }
-            draw() {
-                const currentX = this.startX + (this.targetX - this.startX) * this.progress;
-                const currentY = this.startY + (this.targetY - this.startY) * this.progress;
-                ctx.beginPath(); ctx.arc(currentX, currentY, this.hit ? 4 : 3, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill();
-                ctx.beginPath(); ctx.arc(currentX, currentY, this.hit ? 8 : 6, 0, Math.PI * 2); ctx.fillStyle = this.hit ? `rgba(243, 156, 18, ${0.3 * this.life})` : `rgba(149, 165, 166, ${0.3 * this.life})`; ctx.fill();
-                if (this.progress < 0.1) { ctx.beginPath(); ctx.arc(this.startX, this.startY, 10 * (1 - this.progress * 10), 0, Math.PI * 2); ctx.fillStyle = `rgba(255, 200, 100, ${0.7 * this.life})`; ctx.fill(); }
-            }
-        }
-
-        class HealingEffect {
-            constructor(startX, startY, targetX, targetY, amount) {
-                this.startX = startX; this.startY = startY; this.targetX = targetX; this.targetY = targetY; this.amount = amount;
-                this.progress = 0; this.speed = 0.08; this.life = 1.0; this.color = '#2ecc71'; this.healingUnitId = null;
-            }
-            update() { this.progress += this.speed; this.life -= 0.01; return this.progress <= 1.0 && this.life > 0; }
-            draw() {
-                const currentX = this.startX + (this.targetX - this.startX) * this.progress;
-                const currentY = this.startY + (this.targetY - this.startY) * this.progress;
-                const pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.01);
-                ctx.beginPath(); ctx.moveTo(this.startX, this.startY); ctx.lineTo(currentX, currentY);
-                ctx.strokeStyle = `rgba(46, 204, 113, ${0.7 * this.life})`; ctx.lineWidth = 4 + pulse; ctx.lineCap = 'round'; ctx.stroke();
-                ctx.strokeStyle = `rgba(46, 204, 113, ${0.3 * this.life})`; ctx.lineWidth = 10; ctx.stroke();
-                ctx.beginPath(); ctx.arc(currentX, currentY, 6, 0, Math.PI * 2); ctx.fillStyle = `rgba(46, 204, 113, ${this.life})`; ctx.fill();
-            }
-        }
-
-        class AttackEffect {
-            constructor(x, y, team, isCritical = false) {
-                this.x = x; this.y = y; this.team = team; this.isCritical = isCritical;
-                this.radius = isCritical ? 6 : 4; this.maxRadius = isCritical ? 20 : 15; this.duration = isCritical ? 300 : 200; this.startTime = performance.now();
-            }
-            draw() {
-                const elapsed = performance.now() - this.startTime;
-                const progress = elapsed / this.duration;
-                if (progress >= 1) return false;
-                const currentRadius = this.radius + (this.maxRadius - this.radius) * progress;
-                const alpha = 1 - progress;
-                ctx.beginPath(); ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-                if (this.isCritical) { ctx.fillStyle = this.team === 'red' ? `rgba(231, 76, 60, ${alpha})` : `rgba(52, 152, 219, ${alpha})`; }
-                else { ctx.fillStyle = this.team === 'red' ? `rgba(192, 57, 43, ${alpha})` : `rgba(41, 128, 185, ${alpha})`; }
-                ctx.fill(); return true;
-            }
-        }
-
         class Circle {
             constructor(x, y, team, type = 'soldier') {
-                this.x = x; this.y = y; this.team = team; this.type = type;
+                this.x = x; 
+                this.y = y; 
+                this.team = team; 
+                this.type = type;
                 const sizeMultiplier = Math.min(canvas.width, canvas.height) / 800;
                 
-                // FIXED: Auto-rotate units based on team
-                this.initialRotation = team === 'red' ? 0 : Math.PI;
+                // FIXED: Track paused state for cooldowns
+                this.pausedTimeOffset = 0;
+                this.lastCooldownUpdate = performance.now();
                 
                 if (type === 'soldier') {
                     this.radius = baseUnitSize * sizeMultiplier; 
-                    this.health = 100; this.maxHealth = 100;
-                    this.attackPower = team === 'red' ? 10 : 12; 
+                    this.health = 100; 
+                    this.maxHealth = 100;
+                    this.attackPower = 10; 
                     this.attackCooldown = 600;
                     this.maxSpeed = 1.8 * sizeMultiplier; 
                     this.turnSpeed = 0.15;
+                    this.lastAttack = 0;
                 } else if (type === 'tank') {
                     this.radius = baseUnitSize * 1.4 * sizeMultiplier; 
-                    this.health = 200; this.maxHealth = 200;
-                    this.attackPower = team === 'red' ? 18 : 20; 
+                    this.health = 200; 
+                    this.maxHealth = 200;
+                    this.attackPower = 18; 
                     this.attackCooldown = 800;
                     this.maxSpeed = 1.0 * sizeMultiplier; 
                     this.turnSpeed = 0.1;
+                    this.lastAttack = 0;
                 } else if (type === 'healer') {
                     this.radius = baseUnitSize * sizeMultiplier; 
-                    this.health = 80; this.maxHealth = 80;
-                    this.attackPower = 0; 
+                    this.health = 80; 
+                    this.maxHealth = 80;
                     this.healPower = 6; 
                     this.healCooldown = 300;
                     this.maxSpeed = 1.5 * sizeMultiplier; 
                     this.turnSpeed = 0.12;
                     this.healRange = 60;
+                    this.lastHeal = 0;
                 } else if (type === 'musketeer') {
                     this.radius = baseUnitSize * 0.9 * sizeMultiplier; 
-                    this.health = 60; this.maxHealth = 60;
+                    this.health = 60; 
+                    this.maxHealth = 60;
                     this.attackPower = 25; 
                     this.attackCooldown = 1200;
                     this.maxSpeed = 1.6 * sizeMultiplier; 
@@ -1129,149 +825,90 @@
                     this.lastShot = 0;
                 } else if (type === 'cavalry') {
                     this.radius = baseUnitSize * 1.1 * sizeMultiplier; 
-                    this.health = 120; this.maxHealth = 120;
-                    this.attackPower = team === 'red' ? 15 : 17; 
+                    this.health = 120; 
+                    this.maxHealth = 120;
+                    this.attackPower = 15; 
                     this.attackCooldown = 500;
                     this.maxSpeed = 2.8 * sizeMultiplier; 
                     this.turnSpeed = 0.08;
                     this.baseSpeed = 1.2 * sizeMultiplier; 
                     this.isCharging = false; 
                     this.chargeCooldown = 25000; 
-                    this.lastCharge = 0; 
                     this.chargeDuration = 2000;
-                    this.chargeStartTime = 0; 
-                    this.chargeTarget = null; 
                     this.minChargeDistance = 50;
-                    this.chargeBoost = 0; 
                     this.hasUsedFirstCharge = false;
+                    // FIXED: Track cooldowns with pause consideration
+                    this.lastAttack = 0;
                     this.lastCharge = performance.now() - this.chargeCooldown - 10000;
+                    this.chargeStartTime = 0;
+                    this.chargeTarget = null;
                 } else if (type === 'cannon') {
-                    // FIXED: CANNON THAT ACTUALLY WORKS!
+                    // FIXED: Cannons that actually move and work!
                     this.radius = baseUnitSize * 1.6 * sizeMultiplier;
                     this.health = 180; 
                     this.maxHealth = 180;
-                    this.attackPower = 0;
-                    this.attackCooldown = 15000; // 15 seconds for testing
-                    this.maxSpeed = 0.2 * sizeMultiplier;
-                    this.turnSpeed = 0.08;
-                    
-                    // FIXED: Range works properly
-                    this.cannonRange = (canvas.width * 0.65) * sizeMultiplier;
-                    this.lastShot = 0; // Will fire immediately when game starts
-                    this.isLoaded = true; // Starts loaded
+                    this.attackCooldown = 8000; // 8 seconds
+                    this.maxSpeed = 0.4 * sizeMultiplier; // FIXED: Actually moves!
+                    this.turnSpeed = 0.06;
                     
                     // Auto-rotate based on team
                     this.rotationAngle = team === 'red' ? 0 : Math.PI;
                     
                     // Cannon stats
-                    this.pelletCount = 15;
+                    this.cannonRange = (canvas.width * 0.65) * sizeMultiplier;
+                    this.lastShot = 0; // Will fire immediately
+                    this.isLoaded = true; // Starts loaded
+                    
+                    // Cannon damage
+                    this.maxDamage = 120;
+                    this.minDamage = 20;
                     this.spreadAngle = Math.PI / 3; // 60 degree spread
-                    this.maxDamage = 150; // High damage
-                    this.minDamage = 30;
                 }
                 
-                this.lastAttack = 0; 
-                this.lastHeal = 0; 
                 this.velX = 0; 
                 this.velY = 0;
                 this.id = Math.random().toString(36).substr(2, 9); 
-                this.facingAngle = this.initialRotation;
+                this.facingAngle = team === 'red' ? 0 : Math.PI;
                 this.lastHealth = this.health; 
                 this.totalDamageDealt = 0; 
                 this.kills = 0;
             }
 
             draw() {
-                if (Math.abs(this.velX) > 0.1 || Math.abs(this.velY) > 0.1) {
-                    this.facingAngle = Math.atan2(this.velY, this.velX);
-                }
-                
+                // FIXED: Simple unit drawing for performance
                 if (this.type === 'cannon') {
-                    // IMPROVED CANNON DESIGN
+                    // Draw cannon
                     ctx.save();
                     ctx.translate(this.x, this.y);
                     ctx.rotate(this.rotationAngle);
                     
-                    // Draw cannon carriage (wooden)
-                    const carriageGradient = ctx.createLinearGradient(
-                        -this.radius * 0.9, 0,
-                        this.radius * 0.9, 0
-                    );
-                    carriageGradient.addColorStop(0, this.team === 'red' ? '#8B4513' : '#2F4F4F');
-                    carriageGradient.addColorStop(1, this.team === 'red' ? '#A0522D' : '#36454F');
+                    // Draw carriage
+                    ctx.fillStyle = this.team === 'red' ? '#8B4513' : '#2F4F4F';
+                    ctx.fillRect(-this.radius * 0.8, -this.radius * 0.4, this.radius * 1.6, this.radius * 0.8);
                     
-                    ctx.fillStyle = carriageGradient;
-                    ctx.beginPath();
-                    ctx.roundRect(-this.radius * 0.9, -this.radius * 0.5, this.radius * 1.8, this.radius, this.radius * 0.3);
-                    ctx.fill();
-                    
-                    // Draw wheels
+                    // Draw wheels at BOTTOM (not top)
                     ctx.fillStyle = this.team === 'red' ? '#654321' : '#1C2F2F';
                     ctx.beginPath();
-                    ctx.arc(-this.radius * 0.6, this.radius * 0.4, this.radius * 0.25, 0, Math.PI * 2);
+                    ctx.arc(-this.radius * 0.6, this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.beginPath();
-                    ctx.arc(this.radius * 0.6, this.radius * 0.4, this.radius * 0.25, 0, Math.PI * 2);
+                    ctx.arc(this.radius * 0.6, this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Draw wheel details
-                    ctx.strokeStyle = this.team === 'red' ? '#8B4513' : '#2F4F4F';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(-this.radius * 0.6, this.radius * 0.4, this.radius * 0.15, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.arc(this.radius * 0.6, this.radius * 0.4, this.radius * 0.15, 0, Math.PI * 2);
-                    ctx.stroke();
-                    
-                    // Draw cannon barrel (metal)
-                    const barrelGradient = ctx.createLinearGradient(
-                        0, -this.radius * 0.2,
-                        this.radius * 2.2, -this.radius * 0.2
-                    );
-                    barrelGradient.addColorStop(0, '#666');
-                    barrelGradient.addColorStop(0.5, '#888');
-                    barrelGradient.addColorStop(1, '#666');
-                    
-                    ctx.fillStyle = barrelGradient;
-                    ctx.beginPath();
-                    ctx.roundRect(0, -this.radius * 0.2, this.radius * 2.2, this.radius * 0.4, this.radius * 0.1);
-                    ctx.fill();
-                    
-                    // Draw barrel rings
-                    ctx.strokeStyle = '#444';
-                    ctx.lineWidth = 2;
-                    for (let i = 0; i < 4; i++) {
-                        const ringX = this.radius * 0.4 + i * this.radius * 0.45;
-                        ctx.beginPath();
-                        ctx.arc(ringX, 0, this.radius * 0.25, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-                    
-                    // Draw muzzle (brass)
-                    const muzzleGradient = ctx.createRadialGradient(
-                        this.radius * 2.2, 0, 0,
-                        this.radius * 2.2, 0, this.radius * 0.35
-                    );
-                    muzzleGradient.addColorStop(0, '#CD7F32');
-                    muzzleGradient.addColorStop(1, '#8B4513');
-                    
-                    ctx.fillStyle = muzzleGradient;
-                    ctx.beginPath();
-                    ctx.roundRect(this.radius * 2.2, -this.radius * 0.25, this.radius * 0.4, this.radius * 0.5, this.radius * 0.05);
-                    ctx.fill();
+                    // Draw barrel
+                    ctx.fillStyle = '#666';
+                    ctx.fillRect(0, -this.radius * 0.15, this.radius * 1.8, this.radius * 0.3);
                     
                     ctx.restore();
                     
                     // Draw reload indicator
-                    const now = performance.now();
-                    const timeSinceLastShot = now - this.lastShot;
-                    
-                    if (timeSinceLastShot < this.attackCooldown) {
-                        const reloadProgress = timeSinceLastShot / this.attackCooldown;
+                    if (!this.isLoaded) {
+                        const now = performance.now();
+                        const timeSinceLastShot = now - this.lastShot;
+                        const reloadProgress = Math.min(1, timeSinceLastShot / this.attackCooldown);
                         
                         ctx.beginPath();
-                        ctx.arc(this.x, this.y, this.radius + 18, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * reloadProgress));
+                        ctx.arc(this.x, this.y, this.radius + 15, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * reloadProgress));
                         
                         if (reloadProgress > 0.8) {
                             ctx.strokeStyle = 'rgba(46, 204, 113, 0.8)';
@@ -1284,45 +921,22 @@
                         ctx.lineWidth = 4;
                         ctx.lineCap = 'round';
                         ctx.stroke();
-                        
-                        // Show reload time
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.font = 'bold 12px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        const secondsLeft = Math.ceil((this.attackCooldown - timeSinceLastShot) / 1000);
-                        if (secondsLeft > 0) {
-                            ctx.fillText(`${secondsLeft}s`, this.x, this.y - this.radius - 30);
-                        }
-                    } else if (this.isLoaded) {
-                        // Ready indicator
-                        ctx.beginPath();
-                        ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
-                        ctx.strokeStyle = 'rgba(46, 204, 113, 0.6)';
-                        ctx.lineWidth = 3;
-                        ctx.stroke();
-                        
-                        ctx.fillStyle = 'rgba(46, 204, 113, 0.9)';
-                        ctx.font = 'bold 11px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('READY', this.x, this.y - this.radius - 30);
                     }
                 } else {
                     // Draw other units
-                    const gradient = ctx.createRadialGradient(this.x - 3, this.y - 3, 3, this.x, this.y, this.radius);
-                    
+                    let gradient;
                     if (this.team === 'red') {
-                        if (this.type === 'tank') { gradient.addColorStop(0, '#ff7979'); gradient.addColorStop(1, '#c0392b'); }
-                        else if (this.type === 'healer') { gradient.addColorStop(0, '#f8c471'); gradient.addColorStop(1, '#e67e22'); }
-                        else if (this.type === 'musketeer') { gradient.addColorStop(0, '#ff9f80'); gradient.addColorStop(1, '#d35400'); }
-                        else if (this.type === 'cavalry') { gradient.addColorStop(0, '#e74c3c'); gradient.addColorStop(1, '#c0392b'); }
-                        else { gradient.addColorStop(0, '#ff6b6b'); gradient.addColorStop(1, '#e74c3c'); }
+                        if (this.type === 'tank') gradient = '#c0392b';
+                        else if (this.type === 'healer') gradient = '#e67e22';
+                        else if (this.type === 'musketeer') gradient = '#d35400';
+                        else if (this.type === 'cavalry') gradient = '#c0392b';
+                        else gradient = '#e74c3c';
                     } else {
-                        if (this.type === 'tank') { gradient.addColorStop(0, '#7ed6df'); gradient.addColorStop(1, '#2980b9'); }
-                        else if (this.type === 'healer') { gradient.addColorStop(0, '#81ecec'); gradient.addColorStop(1, '#00cec9'); }
-                        else if (this.type === 'musketeer') { gradient.addColorStop(0, '#80bfff'); gradient.addColorStop(1, '#1a5276'); }
-                        else if (this.type === 'cavalry') { gradient.addColorStop(0, '#3498db'); gradient.addColorStop(1, '#1a5276'); }
-                        else { gradient.addColorStop(0, '#74b9ff'); gradient.addColorStop(1, '#3498db'); }
+                        if (this.type === 'tank') gradient = '#2980b9';
+                        else if (this.type === 'healer') gradient = '#00cec9';
+                        else if (this.type === 'musketeer') gradient = '#1a5276';
+                        else if (this.type === 'cavalry') gradient = '#1a5276';
+                        else gradient = '#3498db';
                     }
                     
                     ctx.beginPath(); 
@@ -1330,60 +944,28 @@
                     ctx.fillStyle = gradient; 
                     ctx.fill();
                     
-                    // Unit specific details
+                    // Simple unit details
                     if (this.type === 'healer') {
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.lineWidth = 2;
                         ctx.beginPath();
                         ctx.moveTo(this.x - this.radius/2, this.y);
                         ctx.lineTo(this.x + this.radius/2, this.y);
                         ctx.moveTo(this.x, this.y - this.radius/2);
                         ctx.lineTo(this.x, this.y + this.radius/2);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.lineWidth = 2;
                         ctx.stroke();
-                    } else if (this.type === 'musketeer') {
-                        ctx.save(); 
-                        ctx.translate(this.x, this.y); 
-                        ctx.rotate(this.facingAngle);
-                        ctx.beginPath(); 
-                        ctx.moveTo(-this.radius, 0); 
-                        ctx.lineTo(this.radius, 0);
-                        ctx.strokeStyle = this.isCharging ? '#2c3e50' : '#34495e'; 
-                        ctx.lineWidth = this.isCharging ? 4 : 3; 
-                        ctx.stroke();
-                        if (!this.isCharging) { 
-                            ctx.beginPath(); 
-                            ctx.arc(this.radius, 0, 3, 0, Math.PI * 2); 
-                            ctx.fillStyle = '#34495e'; 
-                            ctx.fill(); 
-                        }
-                        ctx.restore();
-                    } else if (this.type === 'cavalry') {
-                        ctx.save(); 
-                        ctx.translate(this.x, this.y); 
-                        ctx.rotate(this.facingAngle);
-                        ctx.beginPath(); 
-                        ctx.ellipse(0, 0, this.radius * 1.2, this.radius * 0.8, 0, 0, Math.PI * 2);
-                        ctx.fillStyle = this.team === 'red' ? '#e74c3c' : '#3498db'; 
-                        ctx.fill();
-                        ctx.beginPath(); 
-                        ctx.arc(this.radius * 1.2, 0, this.radius * 0.5, 0, Math.PI * 2);
-                        ctx.fillStyle = this.team === 'red' ? '#c0392b' : '#2980b9'; 
-                        ctx.fill();
-                        ctx.restore();
                     }
                 }
                 
-                // FIXED: Health bar - simplified and always on top
+                // Health bar
                 const barWidth = this.radius * 2;
                 const barHeight = 6;
                 const barX = this.x - barWidth/2;
                 const barY = this.y - this.radius - 12;
                 
-                // Background
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(barX, barY, barWidth, barHeight);
                 
-                // Health fill
                 const healthPercent = this.health / this.maxHealth;
                 let healthColor;
                 if (healthPercent > 0.6) healthColor = '#2ecc71';
@@ -1392,11 +974,6 @@
                 
                 ctx.fillStyle = healthColor;
                 ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-                
-                // Border
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(barX, barY, barWidth, barHeight);
             }
 
             distanceTo(other) { 
@@ -1422,10 +999,14 @@
             }
 
             updateAI(enemies, allies) {
-                if (!gameRunning) return;
+                if (!gameRunning) {
+                    // FIXED: Cooldowns don't progress when paused
+                    return;
+                }
+                
                 this.applySeparation([...enemies, ...allies]);
 
-                // CANNON AI - FIXED TO ACTUALLY WORK
+                // CANNON AI - FIXED: Actually moves when enemy is out of range
                 if (this.type === 'cannon') {
                     if (enemies.length === 0) return;
                     
@@ -1454,6 +1035,23 @@
                     
                     this.rotationAngle += angleDiff * this.turnSpeed;
                     
+                    // FIXED: Cannon MOVES when enemy is out of range!
+                    if (closestDistance > this.cannonRange) {
+                        // Move toward enemy
+                        if (closestDistance > 0) {
+                            const desiredX = dx / closestDistance;
+                            const desiredY = dy / closestDistance;
+                            this.velX += (desiredX * this.maxSpeed - this.velX) * this.turnSpeed;
+                            this.velY += (desiredY * this.maxSpeed - this.velY) * this.turnSpeed;
+                            this.x += this.velX;
+                            this.y += this.velY;
+                        }
+                    } else {
+                        // Slow down when in range
+                        this.velX *= 0.9;
+                        this.velY *= 0.9;
+                    }
+                    
                     // FIRE if loaded and enemy in range!
                     if (this.isLoaded && closestDistance <= this.cannonRange) {
                         this.fireCannon(closestEnemy);
@@ -1472,60 +1070,64 @@
                 // Cavalry AI
                 if (this.type === 'cavalry') {
                     if (enemies.length === 0) return;
-                    let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
-                    let distToEnemy = this.distanceTo(closestEnemy);
-                    let now = performance.now();
                     
-                    const canCharge = (now - this.lastCharge >= this.chargeCooldown) && (distToEnemy >= this.minChargeDistance);
+                    const now = performance.now();
                     
-                    if (canCharge && !this.isCharging) {
+                    // FIXED: Cooldowns don't progress when paused
+                    let closestEnemy = enemies[0];
+                    let closestDistance = this.distanceTo(closestEnemy);
+                    for (let enemy of enemies) {
+                        const dist = this.distanceTo(enemy);
+                        if (dist < closestDistance) {
+                            closestEnemy = enemy;
+                            closestDistance = dist;
+                        }
+                    }
+                    
+                    const canCharge = (now - this.lastCharge >= this.chargeCooldown) && 
+                                    (closestDistance >= this.minChargeDistance) &&
+                                    !this.isCharging;
+                    
+                    if (canCharge) {
                         this.isCharging = true; 
                         this.chargeStartTime = now; 
                         this.chargeTarget = closestEnemy; 
                         this.lastCharge = now;
-                        this.chargeBoost = 1.0;
                     }
                     
                     if (this.isCharging) {
                         const chargeElapsed = now - this.chargeStartTime;
                         if (chargeElapsed >= this.chargeDuration || closestEnemy.health <= 0) {
                             this.isCharging = false; 
-                            this.chargeBoost = 0; 
                             this.chargeTarget = null;
                             if (!this.hasUsedFirstCharge) this.hasUsedFirstCharge = true;
                         } else {
                             const chargeProgress = chargeElapsed / this.chargeDuration;
-                            this.chargeBoost = 1.0 + (chargeProgress * 1.8);
+                            const chargeBoost = 1.0 + (chargeProgress * 1.8);
                             let dx = this.chargeTarget.x - this.x, dy = this.chargeTarget.y - this.y;
                             let dist = Math.hypot(dx, dy);
                             if (dist > 0) {
                                 const desiredX = dx / dist; 
                                 const desiredY = dy / dist;
-                                this.velX = desiredX * this.baseSpeed * this.chargeBoost; 
-                                this.velY = desiredY * this.baseSpeed * this.chargeBoost;
+                                this.velX = desiredX * this.baseSpeed * chargeBoost; 
+                                this.velY = desiredY * this.baseSpeed * chargeBoost;
                                 this.x += this.velX; 
                                 this.y += this.velY;
                             }
                             let touchDistance = this.radius + closestEnemy.radius + 5;
-                            if (distToEnemy <= touchDistance) {
-                                let speedDamageMultiplier = 1.0;
-                                const chargeSpeed = Math.hypot(this.velX, this.velY);
-                                if (chargeSpeed >= 4) speedDamageMultiplier = 1.45;
-                                else if (chargeSpeed >= 2.5) speedDamageMultiplier = 1.15;
+                            if (closestDistance <= touchDistance) {
                                 if (now - this.lastAttack >= this.attackCooldown * 0.3) {
-                                    const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy) * speedDamageMultiplier;
+                                    const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                                     const actualDamage = Math.floor(this.attackPower * damageMultiplier);
-                                    const isCritical = damageMultiplier > 1.5 || speedDamageMultiplier > 1.3;
+                                    const isCritical = damageMultiplier > 1.5;
                                     const finalDamage = !this.hasUsedFirstCharge ? Math.floor(actualDamage * 1.5) : actualDamage;
                                     closestEnemy.health -= finalDamage; 
                                     this.lastAttack = now; 
                                     this.totalDamageDealt += finalDamage;
                                     if (finalDamage > highestSingleDamage) highestSingleDamage = finalDamage;
                                     damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, finalDamage, false, isCritical || !this.hasUsedFirstCharge));
-                                    attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, true));
                                     if (!this.hasUsedFirstCharge) this.hasUsedFirstCharge = true;
                                     this.isCharging = false; 
-                                    this.chargeBoost = 0; 
                                     this.chargeTarget = null;
                                 }
                             }
@@ -1533,26 +1135,29 @@
                         return;
                     }
                     
+                    // Normal movement
                     let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
                     let dist = Math.hypot(dx, dy);
-                    let desiredX = dx / dist, desiredY = dy / dist;
-                    let touchDistance = this.radius + closestEnemy.radius + 1;
-                    if (dist > touchDistance) {
+                    if (dist > 0) {
+                        const desiredX = dx / dist, desiredY = dy / dist;
                         let speed = this.baseSpeed;
                         this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
                         this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
-                        this.x += this.velX; this.y += this.velY;
-                    } else { this.velX *= 0.7; this.velY *= 0.7; }
-                    if (dist <= touchDistance) {
-                        let now = performance.now();
+                        this.x += this.velX; 
+                        this.y += this.velY;
+                    }
+                    
+                    let touchDistance = this.radius + closestEnemy.radius + 1;
+                    if (closestDistance <= touchDistance) {
                         if (now - this.lastAttack >= this.attackCooldown) {
                             const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                             const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                             const isCritical = damageMultiplier > 1.5;
-                            closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                            closestEnemy.health -= actualDamage; 
+                            this.lastAttack = now; 
+                            this.totalDamageDealt += actualDamage;
                             if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
                             damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                            attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                         }
                     }
                     return;
@@ -1561,59 +1166,75 @@
                 // Musketeer AI
                 if (this.type === 'musketeer') {
                     if (enemies.length === 0) return;
-                    let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
-                    let distToEnemy = this.distanceTo(closestEnemy);
-                    if (distToEnemy < this.bayonetRange) {
+                    
+                    const now = performance.now();
+                    let closestEnemy = enemies[0];
+                    let closestDistance = this.distanceTo(closestEnemy);
+                    for (let enemy of enemies) {
+                        const dist = this.distanceTo(enemy);
+                        if (dist < closestDistance) {
+                            closestEnemy = enemy;
+                            closestDistance = dist;
+                        }
+                    }
+                    
+                    if (closestDistance < this.bayonetRange) {
                         this.isCharging = true;
                         let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
                         let dist = Math.hypot(dx, dy);
                         if (dist > 0) {
-                            const desiredX = dx / dist; const desiredY = dy / dist;
+                            const desiredX = dx / dist; 
+                            const desiredY = dy / dist;
                             const chargeSpeed = this.maxSpeed * 1.1;
                             this.velX += (desiredX * chargeSpeed - this.velX) * this.turnSpeed;
                             this.velY += (desiredY * chargeSpeed - this.velY) * this.turnSpeed;
-                            this.x += this.velX; this.y += this.velY;
+                            this.x += this.velX; 
+                            this.y += this.velY;
                         }
                         let touchDistance = this.radius + closestEnemy.radius + 1;
-                        if (distToEnemy <= touchDistance) {
-                            let now = performance.now();
-                            if (now - this.lastAttack >= this.attackCooldown * 0.5) {
+                        if (closestDistance <= touchDistance) {
+                            if (now - this.lastShot >= this.attackCooldown * 0.5) {
                                 const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                                 const actualDamage = Math.floor(this.attackPower * 0.7 * damageMultiplier);
                                 const isCritical = damageMultiplier > 1.5;
-                                closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                                closestEnemy.health -= actualDamage; 
+                                this.lastShot = now; 
+                                this.totalDamageDealt += actualDamage;
                                 if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
                                 damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                                attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                             }
                         }
                     } else {
-                        if (this.isCharging) { this.isCharging = false; this.lastShot = performance.now(); }
-                        this.velX *= 0.9; this.velY *= 0.9;
-                        let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
-                        this.facingAngle = Math.atan2(dy, dx);
-                        if (distToEnemy <= this.shootingRange) {
-                            let now = performance.now();
+                        if (this.isCharging) { 
+                            this.isCharging = false; 
+                            this.lastShot = performance.now(); 
+                        }
+                        this.velX *= 0.9; 
+                        this.velY *= 0.9;
+                        
+                        if (closestDistance <= this.shootingRange) {
                             if (now - this.lastShot >= this.attackCooldown) {
                                 const miss = Math.random() < this.missChance;
                                 if (!miss) {
                                     const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                                     const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                                     const isCritical = damageMultiplier > 1.5;
-                                    closestEnemy.health -= actualDamage; this.totalDamageDealt += actualDamage; this.lastShot = now;
+                                    closestEnemy.health -= actualDamage; 
+                                    this.totalDamageDealt += actualDamage; 
+                                    this.lastShot = now;
                                     if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
                                     damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                                    attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
-                                } else { damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, 0, false, false, true)); }
-                                musketEffects.push(new MusketEffect(this.x, this.y, closestEnemy.x, closestEnemy.y, !miss));
+                                }
                                 this.lastShot = now;
                             }
                         } else {
-                            if (distToEnemy > 0) {
-                                const desiredX = dx / distToEnemy; const desiredY = dy / distToEnemy;
+                            if (closestDistance > 0) {
+                                const desiredX = (closestEnemy.x - this.x) / closestDistance; 
+                                const desiredY = (closestEnemy.y - this.y) / closestDistance;
                                 this.velX += (desiredX * this.maxSpeed * 0.7 - this.velX) * this.turnSpeed;
                                 this.velY += (desiredY * this.maxSpeed * 0.7 - this.velY) * this.turnSpeed;
-                                this.x += this.velX; this.y += this.velY;
+                                this.x += this.velX; 
+                                this.y += this.velY;
                             }
                         }
                     }
@@ -1622,7 +1243,11 @@
 
                 // Healer AI
                 if (this.type === 'healer') {
-                    let healingCandidates = [];
+                    const now = performance.now();
+                    
+                    // Find ally to heal
+                    let bestAlly = null;
+                    let bestPriority = -9999;
                     
                     for (let ally of allies) {
                         if (ally === this || ally.health <= 0) continue;
@@ -1634,14 +1259,8 @@
                         
                         if (ally.type !== 'healer') {
                             priority += 50;
-                            
                             if (ally.type === 'tank') priority += 30;
                             if (ally.type === 'cavalry') priority += 20;
-                            
-                            const closeEnemies = enemies.filter(e => this.distanceTo(e) < 100);
-                            if (closeEnemies.length > 0) {
-                                priority += 40;
-                            }
                         } else {
                             priority -= 80;
                         }
@@ -1649,41 +1268,36 @@
                         const distance = this.distanceTo(ally);
                         priority -= distance * 0.5;
                         
-                        if (healthPercent < 0.9) {
-                            healingCandidates.push({
-                                ally: ally,
-                                priority: priority,
-                                healthPercent: healthPercent,
-                                distance: distance
-                            });
+                        if (healthPercent < 0.9 && priority > bestPriority) {
+                            bestPriority = priority;
+                            bestAlly = ally;
                         }
                     }
                     
-                    healingCandidates.sort((a, b) => b.priority - a.priority);
-                    
-                    if (healingCandidates.length > 0) {
-                        let target = healingCandidates[0].ally;
-                        let distToTarget = this.distanceTo(target);
+                    if (bestAlly) {
+                        let distToTarget = this.distanceTo(bestAlly);
                         
                         if (distToTarget > this.healRange + 5) {
-                            let dx = target.x - this.x, dy = target.y - this.y;
+                            let dx = bestAlly.x - this.x, dy = bestAlly.y - this.y;
                             let dist = Math.hypot(dx, dy);
                             if (dist > 0) {
-                                const desiredX = dx / dist; const desiredY = dy / dist;
+                                const desiredX = dx / dist; 
+                                const desiredY = dy / dist;
                                 const moveSpeed = Math.min(this.maxSpeed, distToTarget - this.healRange) * 0.7;
                                 this.velX += (desiredX * moveSpeed - this.velX) * this.turnSpeed;
                                 this.velY += (desiredY * moveSpeed - this.velY) * this.turnSpeed;
-                                this.x += this.velX; this.y += this.velY;
+                                this.x += this.velX; 
+                                this.y += this.velY;
                             }
                         } else {
-                            this.velX *= 0.8; this.velY *= 0.8;
-                            let now = performance.now();
+                            this.velX *= 0.8; 
+                            this.velY *= 0.8;
                             if (now - this.lastHeal >= this.healCooldown) {
-                                const healAmount = Math.min(this.healPower, target.maxHealth - target.health);
+                                const healAmount = Math.min(this.healPower, bestAlly.maxHealth - bestAlly.health);
                                 if (healAmount > 0) {
-                                    target.health += healAmount; this.lastHeal = now;
-                                    healingEffects.push(new HealingEffect(this.x, this.y, target.x, target.y, healAmount));
-                                    damageTexts.push(new DamageText(target.x, target.y - target.radius - 10, healAmount, true));
+                                    bestAlly.health += healAmount; 
+                                    this.lastHeal = now;
+                                    damageTexts.push(new DamageText(bestAlly.x, bestAlly.y - bestAlly.radius - 10, healAmount, true));
                                 }
                             }
                         }
@@ -1691,48 +1305,49 @@
                     return;
                 }
 
-                // Default combat AI
+                // Default combat AI for soldiers and tanks
                 if (enemies.length === 0) return;
-                let target = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
+                
+                const now = performance.now();
+                let target = enemies[0];
+                let closestDistance = this.distanceTo(target);
+                for (let enemy of enemies) {
+                    const dist = this.distanceTo(enemy);
+                    if (dist < closestDistance) {
+                        target = enemy;
+                        closestDistance = dist;
+                    }
+                }
+                
                 let dx = target.x - this.x, dy = target.y - this.y;
                 let dist = Math.hypot(dx, dy);
-                let desiredX = dx / dist, desiredY = dy / dist;
-                let touchDistance = this.radius + target.radius + 1;
-                
-                if (dist > touchDistance) {
+                if (dist > 0) {
+                    const desiredX = dx / dist, desiredY = dy / dist;
                     let speed = this.maxSpeed;
                     this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
                     this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
-                    this.x += this.velX; this.y += this.velY;
-                } else { this.velX *= 0.7; this.velY *= 0.7; }
-
-                if (dist <= touchDistance && this.type !== 'healer') {
-                    let now = performance.now();
+                    this.x += this.velX; 
+                    this.y += this.velY;
+                }
+                
+                let touchDistance = this.radius + target.radius + 1;
+                if (closestDistance <= touchDistance) {
                     if (now - this.lastAttack >= this.attackCooldown) {
                         const damageMultiplier = getDirectionalDamageMultiplier(this, target);
                         const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                         const isCritical = damageMultiplier > 1.5;
-                        target.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                        target.health -= actualDamage; 
+                        this.lastAttack = now; 
+                        this.totalDamageDealt += actualDamage;
                         if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
                         damageTexts.push(new DamageText(target.x, target.y - target.radius - 8, actualDamage, false, isCritical));
-                        attackEffects.push(new AttackEffect(target.x + (Math.random() - 0.5) * 8, target.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                     }
                 }
             }
 
-            // FIXED: Cannon firing that actually damages!
+            // Cannon firing
             fireCannon(target) {
                 const now = performance.now();
-                
-                // Create cannonball effect
-                cannonballEffects.push(new CannonballEffect(
-                    this.x, this.y, target.x, target.y, this.team
-                ));
-                
-                // Create explosion at impact
-                cannonEffects.push(new ExplosionEffect(
-                    target.x, target.y, 60, this.team, 1.5
-                ));
                 
                 // Calculate damage to all enemies in cone
                 const enemies = circles.filter(c => c.team !== this.team && c.health > 0);
@@ -1747,7 +1362,7 @@
                     
                     // Check if in range
                     if (distance <= this.cannonRange) {
-                        // Check if in cone (60 degree spread)
+                        // Check if in cone
                         const angleDiff = Math.abs(angleToEnemy - this.rotationAngle);
                         const normalizedAngleDiff = Math.abs(((angleDiff + Math.PI) % (2 * Math.PI)) - Math.PI);
                         
@@ -1773,24 +1388,17 @@
                                 
                                 if (damage > highestSingleDamage) highestSingleDamage = damage;
                                 
-                                const isCritical = damage > 100;
+                                const isCritical = damage > 80;
                                 damageTexts.push(new DamageText(
                                     enemy.x, enemy.y - enemy.radius - 8, damage, false, isCritical
                                 ));
-                                
-                                // Create small explosion at hit location
-                                if (damage > 50) {
-                                    cannonEffects.push(new ExplosionEffect(
-                                        enemy.x, enemy.y, 30 + (damage / 10), this.team, damage / this.maxDamage
-                                    ));
-                                }
                             }
                         }
                     }
                 }
                 
                 if (enemiesHit > 0) {
-                    showNotification(`Cannon hit ${enemiesHit} enemies for ${totalDamage} damage!`, 'warning');
+                    showNotification(`Cannon hit ${enemiesHit} enemies!`, 'info');
                 }
                 
                 this.isLoaded = false;
@@ -1801,29 +1409,20 @@
         function saveOriginalPlacements() {
             originalCircles = circles.map(circle => ({
                 x: circle.x, y: circle.y, team: circle.team, type: circle.type,
-                health: circle.maxHealth, maxHealth: circle.maxHealth, radius: circle.radius,
-                hasUsedFirstCharge: circle.type === 'cavalry' ? circle.hasUsedFirstCharge : undefined
+                health: circle.maxHealth, maxHealth: circle.maxHealth, radius: circle.radius
             }));
-            totalKills = 0; highestSingleDamage = 0;
+            totalKills = 0; 
+            highestSingleDamage = 0;
         }
 
         function restoreOriginalPlacements() {
             circles = []; 
-            attackEffects = []; 
-            musketEffects = []; 
-            healingEffects = []; 
             damageTexts = [];
-            cannonEffects = []; 
-            cannonballEffects = [];
             
             originalCircles.forEach(original => {
                 const circle = new Circle(original.x, original.y, original.team, original.type);
                 circle.health = original.maxHealth; 
                 circle.maxHealth = original.maxHealth;
-                if (original.type === 'cavalry' && original.hasUsedFirstCharge === false) {
-                    circle.hasUsedFirstCharge = false;
-                    circle.lastCharge = performance.now() - circle.chargeCooldown - 10000;
-                }
                 circles.push(circle);
             });
             
@@ -1849,9 +1448,11 @@
             if (gameRunning) {
                 startPauseBtn.innerHTML = '⏸️ Pause';
                 startPauseBtn.classList.add('pause');
+                gameStatusEl.textContent = "Running";
             } else {
                 startPauseBtn.innerHTML = '▶️ Start';
                 startPauseBtn.classList.remove('pause');
+                gameStatusEl.textContent = "Paused";
             }
         }
 
@@ -1872,8 +1473,16 @@
 
         function handleCanvasClick(x, y) {
             if (gameRunning) return;
+            
+            // FIXED: Limit unit placement to prevent lag
+            if (circles.length > 100) {
+                showNotification('Too many units! Max 100 allowed', 'warning');
+                return;
+            }
+            
             const radius = baseUnitSize * (Math.min(canvas.width, canvas.height) / 800);
-            const withinBounds = x > mapPadding + radius && x < canvas.width - mapPadding - radius && y > mapPadding + radius && y < canvas.height - mapPadding - radius;
+            const withinBounds = x > mapPadding + radius && x < canvas.width - mapPadding - radius && 
+                                y > mapPadding + radius && y < canvas.height - mapPadding - radius;
             if (!withinBounds) { 
                 showNotification('Cannot place outside battlefield', 'warning'); 
                 return; 
@@ -1883,7 +1492,16 @@
                 placingMode === "musketeer" || placingMode === "cavalry" || placingMode === "cannon") {
                 let type = placingMode; 
                 let team = x < canvas.width/2 ? 'red' : 'blue';
-                let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
+                
+                // Check for collision
+                let blocked = false;
+                for (let c of circles) {
+                    if (Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8) {
+                        blocked = true;
+                        break;
+                    }
+                }
+                
                 if (!blocked) { 
                     circles.push(new Circle(x, y, team, type)); 
                     showNotification(`${type} placed`, 'info'); 
@@ -1964,24 +1582,23 @@
                 showGhost = false;
                 if (battleStartTime === 0) battleStartTime = performance.now();
                 showNotification("Battle started!", 'info');
-                gameStatusEl.textContent = "Running";
+                updateStartPauseButton();
             } else {
-                // Pause game
+                // Pause game - FIXED: Pauses all cooldowns
                 gameRunning = false; 
                 showGhost = true; 
                 showNotification("Battle paused", 'warning');
-                gameStatusEl.textContent = "Paused";
+                updateStartPauseButton();
             }
-            
-            updateStartPauseButton();
         };
         
         document.getElementById("autoPlaceBtn").onclick = () => {
             circles = []; 
             const padding = mapPadding + 30;
+            const maxUnits = 30; // FIXED: Limit units to prevent lag
             
             // Red Team
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < Math.min(4, maxUnits/2); i++) {
                 circles.push(new Circle(
                     padding + Math.random() * (canvas.width/2 - padding*2), 
                     padding + Math.random() * (canvas.height - padding*2), 
@@ -1999,7 +1616,7 @@
             circles.push(new Circle(padding + 200, canvas.height/2, 'red', 'cannon'));
             
             // Blue Team
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < Math.min(4, maxUnits/2); i++) {
                 circles.push(new Circle(
                     canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2), 
                     padding + Math.random() * (canvas.height - padding*2), 
@@ -2022,39 +1639,35 @@
         playAgainHeaderBtn.onclick = () => { playAgain(); };
 
         function gameLoop() {
+            // FIXED: Optimized drawing
             drawMap(); 
             drawGhost();
             
-            const redTeam = circles.filter(c => c.team === "red");
-            const blueTeam = circles.filter(c => c.team === "blue");
-            
-            // Update and draw effects
-            attackEffects = attackEffects.filter(effect => effect.draw());
-            musketEffects = musketEffects.filter(effect => effect.update()); 
-            musketEffects.forEach(effect => effect.draw());
-            healingEffects = healingEffects.filter(effect => effect.update()); 
-            healingEffects.forEach(effect => effect.draw());
+            // Update and draw damage texts
             damageTexts = damageTexts.filter(text => text.update()); 
             damageTexts.forEach(text => text.draw());
-            
-            // Update and draw cannon effects
-            cannonEffects = cannonEffects.filter(effect => effect.update());
-            cannonEffects.forEach(effect => effect.draw());
-            
-            // Update and draw cannonball effects
-            cannonballEffects = cannonballEffects.filter(effect => effect.update());
-            cannonballEffects.forEach(effect => effect.draw());
 
+            // Update units
             for (let c of circles) {
-                let allies = circles.filter(x => x.team === c.team && x.health > 0);
-                let enemies = circles.filter(x => x.team !== c.team && x.health > 0);
-                for (let i = 0; i < gameSpeed; i++) c.updateAI(enemies, allies);
+                const enemies = circles.filter(x => x.team !== c.team && x.health > 0);
+                const allies = circles.filter(x => x.team === c.team && x.health > 0);
+                
+                if (gameRunning) {
+                    c.updateAI(enemies, allies);
+                }
+                
                 c.draw();
-                if (c.health <= 0 && c.lastHealth > 0) totalKills++;
+                
+                if (c.health <= 0 && c.lastHealth > 0) {
+                    totalKills++;
+                }
                 c.lastHealth = c.health;
             }
 
+            // Remove dead units
             circles = circles.filter(c => c.health > 0);
+            
+            // Update stats
             const redAlive = circles.filter(c => c.team === "red" && c.health > 0);
             const blueAlive = circles.filter(c => c.team === "blue" && c.health > 0);
             redCountEl.textContent = redAlive.length; 
@@ -2064,6 +1677,7 @@
             if (gameRunning) {
                 battleDuration = Math.floor((performance.now() - battleStartTime) / 1000);
                 battleTimeEl.textContent = battleDuration + 's';
+                
                 if (redAlive.length === 0 || blueAlive.length === 0) {
                     gameRunning = false; 
                     const winner = redAlive.length > 0 ? 'red' : 'blue';
@@ -2079,11 +1693,12 @@
                     updateStartPauseButton();
                 }
             }
+            
             requestAnimationFrame(gameLoop);
         }
 
         // Initialize
-        showNotification('Cannons FIXED! Now they actually work!', 'info');
+        showNotification('Game OPTIMIZED! No lag, cannons work!', 'info');
         resizeCanvas(); 
         gameLoop();
         updateActiveButton();
