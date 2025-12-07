@@ -2,7 +2,7 @@
 
 A real-time battle simulation game with multiple unit types, strategic combat, and visual effects.
 
-![Game Screenshot](https://via.placeholder.com/800x400.png?text=Neon+Battle+Simulator)
+
 
 ## 🚀 Features
 
