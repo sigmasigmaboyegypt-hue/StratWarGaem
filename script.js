@@ -183,8 +183,10 @@ function initGame() {
             ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
             ctx.lineWidth = 3;
             ctx.stroke();
+            // Barrel tip at the FRONT (right for red, left for blue)
+            let barrelX = isBlueTeam ? -radius : radius;
             ctx.beginPath();
-            ctx.arc(radius, 0, 3, 0, Math.PI * 2);
+            ctx.arc(barrelX, 0, 3, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fill();
             ctx.restore();
@@ -195,8 +197,10 @@ function initGame() {
             if (isBlueTeam) {
                 ctx.rotate(Math.PI); // 180 degrees - faces left
             }
+            // Horse head at the FRONT (right for red, left for blue)
+            let headX = isBlueTeam ? -radius * 0.7 : radius * 0.7;
             ctx.beginPath();
-            ctx.arc(radius * 0.7, 0, radius * 0.4, 0, Math.PI * 2);
+            ctx.arc(headX, 0, radius * 0.4, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.fill();
             ctx.restore();
@@ -368,38 +372,47 @@ function initGame() {
             } else if (this.type === 'musketeer') {
                 ctx.save(); 
                 ctx.translate(this.x, this.y); 
-                ctx.rotate(this.facingAngle);
-                // BLUE TEAM FIX: Musketeers face opposite direction
+                // Blue team faces left toward enemy, Red team faces right toward enemy
                 if (this.team === 'blue') {
-                    ctx.rotate(Math.PI); // 180 degrees - faces left toward enemy
+                    ctx.rotate(this.facingAngle + Math.PI); // Faces LEFT toward enemy
+                } else {
+                    ctx.rotate(this.facingAngle); // Faces RIGHT toward enemy
                 }
+                
+                // Draw musket - ALWAYS points toward enemy (right for red, left for blue)
+                let musketStart = this.team === 'blue' ? this.radius : -this.radius;
+                let musketEnd = this.team === 'blue' ? -this.radius : this.radius;
+                let barrelPos = this.team === 'blue' ? -this.radius : this.radius;
+                
                 ctx.beginPath(); 
-                ctx.moveTo(-this.radius, 0); 
-                ctx.lineTo(this.radius, 0);
+                ctx.moveTo(musketStart, 0); 
+                ctx.lineTo(musketEnd, 0);
                 ctx.strokeStyle = this.isCharging ? '#2c3e50' : '#34495e'; 
                 ctx.lineWidth = this.isCharging ? 4 : 3; 
                 ctx.stroke();
+                
                 if (this.isCharging) {
                     ctx.beginPath(); 
-                    ctx.moveTo(this.radius, 0); 
-                    ctx.lineTo(this.radius + 8, 0);
+                    ctx.moveTo(barrelPos, 0); 
+                    ctx.lineTo(barrelPos + (this.team === 'blue' ? -8 : 8), 0);
                     ctx.strokeStyle = '#7f8c8d'; 
                     ctx.lineWidth = 2; 
                     ctx.stroke();
                     ctx.beginPath(); 
-                    ctx.moveTo(this.radius + 8, 0); 
-                    ctx.lineTo(this.radius + 4, -3); 
-                    ctx.lineTo(this.radius + 4, 3); 
+                    ctx.moveTo(barrelPos + (this.team === 'blue' ? -8 : 8), 0); 
+                    ctx.lineTo(barrelPos + (this.team === 'blue' ? -4 : 4), -3); 
+                    ctx.lineTo(barrelPos + (this.team === 'blue' ? -4 : 4), 3); 
                     ctx.closePath();
                     ctx.fillStyle = '#bdc3c7'; 
                     ctx.fill();
                 } else { 
                     ctx.beginPath(); 
-                    ctx.arc(this.radius, 0, 3, 0, Math.PI * 2); 
+                    ctx.arc(barrelPos, 0, 3, 0, Math.PI * 2); 
                     ctx.fillStyle = '#34495e'; 
                     ctx.fill(); 
                 }
                 ctx.restore();
+                
                 if (this.isCharging) { 
                     ctx.beginPath(); 
                     ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2); 
@@ -410,36 +423,51 @@ function initGame() {
             } else if (this.type === 'cavalry') {
                 ctx.save(); 
                 ctx.translate(this.x, this.y); 
-                ctx.rotate(this.facingAngle);
-                // BLUE TEAM FIX: Cavalry face opposite direction
+                // Blue team faces left toward enemy, Red team faces right toward enemy
                 if (this.team === 'blue') {
-                    ctx.rotate(Math.PI); // 180 degrees - faces left toward enemy
+                    ctx.rotate(this.facingAngle + Math.PI); // Faces LEFT toward enemy
+                } else {
+                    ctx.rotate(this.facingAngle); // Faces RIGHT toward enemy
                 }
+                
+                // Draw cavalry body - horse head at FRONT (right for red, left for blue)
+                let bodyWidth = this.radius * 1.2;
+                let bodyHeight = this.radius * 0.8;
+                let headX = this.team === 'blue' ? -bodyWidth : bodyWidth;
+                
                 ctx.beginPath(); 
-                ctx.ellipse(0, 0, this.radius * 1.2, this.radius * 0.8, 0, 0, Math.PI * 2);
+                ctx.ellipse(0, 0, bodyWidth, bodyHeight, 0, 0, Math.PI * 2);
                 ctx.fillStyle = this.team === 'red' ? '#e74c3c' : '#3498db'; 
                 ctx.fill();
+                
+                // Horse head at FRONT
                 ctx.beginPath(); 
-                ctx.arc(this.radius * 1.2, 0, this.radius * 0.5, 0, Math.PI * 2);
+                ctx.arc(headX, 0, this.radius * 0.5, 0, Math.PI * 2);
                 ctx.fillStyle = this.team === 'red' ? '#c0392b' : '#2980b9'; 
                 ctx.fill();
+                
                 if (this.isCharging) {
+                    // Dust/speed effect BEHIND the cavalry (opposite of head)
+                    let dustX = this.team === 'blue' ? bodyWidth : -bodyWidth;
                     for (let i = 0; i < 3; i++) { 
+                        let dustOffset = this.team === 'blue' ? bodyWidth + i * 5 : -bodyWidth - i * 5;
                         ctx.beginPath(); 
-                        ctx.arc(-this.radius * 1.5 - i * 5, 0, this.radius * 0.3 * (1 - i * 0.3), 0, Math.PI * 2); 
+                        ctx.arc(dustOffset, 0, this.radius * 0.3 * (1 - i * 0.3), 0, Math.PI * 2); 
                         ctx.fillStyle = `rgba(149, 165, 166, ${0.7 - i * 0.2})`; 
                         ctx.fill(); 
                     }
                     ctx.strokeStyle = `rgba(255, 255, 255, 0.6)`; 
                     ctx.lineWidth = 2;
                     for (let i = 0; i < 3; i++) {
+                        let startX = this.team === 'blue' ? bodyWidth + i * 8 : -bodyWidth - i * 8;
+                        let endX = this.team === 'blue' ? bodyWidth * 1.5 + i * 15 : -bodyWidth * 1.5 - i * 15;
                         ctx.beginPath(); 
-                        ctx.moveTo(-this.radius * 1.5 - i * 8, -this.radius * 0.5); 
-                        ctx.lineTo(-this.radius * 2 - i * 15, -this.radius * 0.5 - i * 2); 
+                        ctx.moveTo(startX, -this.radius * 0.5); 
+                        ctx.lineTo(endX, -this.radius * 0.5 - i * 2); 
                         ctx.stroke();
                         ctx.beginPath(); 
-                        ctx.moveTo(-this.radius * 1.5 - i * 8, this.radius * 0.5); 
-                        ctx.lineTo(-this.radius * 2 - i * 15, this.radius * 0.5 + i * 2); 
+                        ctx.moveTo(startX, this.radius * 0.5); 
+                        ctx.lineTo(endX, this.radius * 0.5 + i * 2); 
                         ctx.stroke();
                     }
                     if (!this.hasUsedFirstCharge) { 
@@ -451,6 +479,7 @@ function initGame() {
                     }
                 }
                 ctx.restore();
+                
                 if (!this.isCharging && this.hasUsedFirstCharge) {
                     const now = performance.now(); 
                     const chargeProgress = Math.min(1, (now - this.lastCharge) / this.chargeCooldown);
