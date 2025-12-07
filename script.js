@@ -47,6 +47,17 @@ function initGame() {
     const MUSKET_RANGE = 150;
     const BAYONET_RANGE = 60;
 
+    // Keyboard shortcuts mapping
+    const keyMappings = {
+        '1': 'soldier',
+        '2': 'tank',
+        '3': 'healer',
+        '4': 'musketeer',
+        '5': 'cavalry',
+        'Delete': 'delete',
+        'Backspace': 'delete'
+    };
+
     // Initialize canvas size
     function resizeCanvas() {
         const container = canvas.parentElement;
@@ -74,6 +85,16 @@ function initGame() {
                 btn.classList.add('active');
             }
         });
+        
+        // Also update delete button
+        const deleteBtn = document.getElementById("deleteTool");
+        if (deleteBtn) {
+            if (placingMode === "delete") {
+                deleteBtn.classList.add('active');
+            } else {
+                deleteBtn.classList.remove('active');
+            }
+        }
     }
 
     function showNotification(message, type = 'info') {
@@ -888,12 +909,82 @@ function initGame() {
         }
     }
 
+    // KEYBOARD SHORTCUTS FUNCTION
+    function handleKeyboardShortcuts(event) {
+        // Don't trigger if user is typing in an input field
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        const key = event.key;
+        
+        // Check if key is in our mappings
+        if (keyMappings[key]) {
+            event.preventDefault(); // Prevent default behavior for these keys
+            
+            const newMode = keyMappings[key];
+            placingMode = newMode;
+            
+            // Show appropriate notification
+            if (newMode === 'delete') {
+                showNotification("Delete Tool", 'warning');
+                showGhost = false;
+            } else {
+                const unitNames = {
+                    'soldier': 'Soldier',
+                    'tank': 'Tank',
+                    'healer': 'Healer',
+                    'musketeer': 'Musketeer',
+                    'cavalry': 'Cavalry'
+                };
+                showNotification(`Placing: ${unitNames[newMode]}`, 'info');
+                showGhost = true;
+            }
+            
+            // Update button highlighting
+            updateActiveButton();
+        }
+        
+        // Spacebar to start/pause
+        if (key === ' ') {
+            event.preventDefault();
+            document.getElementById("startPauseBtn").click();
+        }
+        
+        // 'R' to reset/play again (only when game is not running)
+        if (key === 'r' || key === 'R') {
+            if (!gameRunning && circles.length > 0) {
+                event.preventDefault();
+                restoreOriginalPlacements();
+                showNotification('Game reset', 'info');
+            }
+        }
+        
+        // 'A' for auto-place
+        if (key === 'a' || key === 'A') {
+            event.preventDefault();
+            document.getElementById("autoPlaceBtn").click();
+        }
+        
+        // Escape to cancel placement mode
+        if (key === 'Escape') {
+            event.preventDefault();
+            placingMode = "soldier";
+            showGhost = true;
+            updateActiveButton();
+            showNotification('Switched to Soldier', 'info');
+        }
+    }
+
     // Event Listeners setup
     function setupEventListeners() {
         canvas.addEventListener("mousemove", e => { const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; });
         canvas.addEventListener("click", e => { const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); });
         canvas.addEventListener("touchmove", e => { e.preventDefault(); const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; }, { passive: false });
         canvas.addEventListener("touchstart", e => { e.preventDefault(); const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); }, { passive: false });
+
+        // KEYBOARD EVENT LISTENER
+        document.addEventListener('keydown', handleKeyboardShortcuts);
 
         // Unit buttons
         document.querySelectorAll('.unit-controls button').forEach(btn => {
