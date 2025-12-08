@@ -83,6 +83,14 @@
         </div>
     </div>
 
-    <script src="script.js" defer></script>
+    <!-- Load character files BEFORE main script -->
+    <script src="characters/soldier.js"></script>
+    <script src="characters/tank.js"></script>
+    <script src="characters/healer.js"></script>
+    <script src="characters/musketeer.js"></script>
+    <script src="characters/cavalry.js"></script>
+    
+    <!-- Main game script LAST -->
+    <script src="script.js"></script>
 </body>
 </html>
