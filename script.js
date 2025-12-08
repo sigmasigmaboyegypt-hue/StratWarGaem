@@ -173,26 +173,28 @@ function initGame() {
         } else if (type === "musketeer") {
             ctx.save();
             ctx.translate(mouseX, mouseY);
-            // Blue team faces left (toward enemy), Red team faces right (toward enemy)
+            // BLUE TEAM FACES LEFT, RED TEAM FACES RIGHT
             if (isBlueTeam) {
-                ctx.rotate(Math.PI); // 180 degrees - faces left
+                ctx.rotate(Math.PI); // 180 degrees - faces LEFT
             } else {
-                ctx.rotate(0); // 0 degrees - faces right
+                ctx.rotate(0); // 0 degrees - faces RIGHT
             }
             ctx.beginPath();
-            // Blue team musket points left, Red team points right
+            // Musket orientation
             if (isBlueTeam) {
-                ctx.moveTo(radius, 0);  // Start at right (back)
-                ctx.lineTo(-radius, 0); // End at left (front)
+                // Blue: musket points LEFT (front is left)
+                ctx.moveTo(radius * 0.6, 0);  // Start at right (back)
+                ctx.lineTo(-radius * 0.8, 0); // End at left (front)
             } else {
-                ctx.moveTo(-radius, 0); // Start at left (back)
-                ctx.lineTo(radius, 0);  // End at right (front)
+                // Red: musket points RIGHT (front is right)
+                ctx.moveTo(-radius * 0.6, 0); // Start at left (back)
+                ctx.lineTo(radius * 0.8, 0);  // End at right (front)
             }
             ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
             ctx.lineWidth = 3;
             ctx.stroke();
-            // Barrel tip at the FRONT (right for red, left for blue)
-            let barrelX = isBlueTeam ? -radius : radius;
+            // Barrel tip at the FRONT
+            let barrelX = isBlueTeam ? -radius * 0.8 : radius * 0.8;
             ctx.beginPath();
             ctx.arc(barrelX, 0, 3, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
@@ -201,14 +203,14 @@ function initGame() {
         } else if (type === "cavalry") {
             ctx.save();
             ctx.translate(mouseX, mouseY);
-            // Blue team faces left (toward enemy), Red team faces right (toward enemy)
+            // BLUE TEAM FACES LEFT, RED TEAM FACES RIGHT
             if (isBlueTeam) {
-                ctx.rotate(Math.PI); // 180 degrees - faces left
+                ctx.rotate(Math.PI); // 180 degrees - faces LEFT
             } else {
-                ctx.rotate(0); // 0 degrees - faces right
+                ctx.rotate(0); // 0 degrees - faces RIGHT
             }
-            // Horse head at the FRONT (right for red, left for blue)
-            let headX = isBlueTeam ? -radius * 0.7 : radius * 0.7;
+            // Horse head at the FRONT
+            let headX = isBlueTeam ? -radius * 0.8 : radius * 0.8;
             ctx.beginPath();
             ctx.arc(headX, 0, radius * 0.4, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
@@ -310,14 +312,12 @@ function initGame() {
             
             if (type === 'soldier') {
                 this.radius = baseUnitSize * sizeMultiplier; this.health = 100; this.maxHealth = 100;
-                // FIXED: Same damage for both teams - BALANCED!
-                this.attackPower = 11; // Was: team === 'red' ? 10 : 12
+                this.attackPower = 11;
                 this.attackCooldown = 600;
                 this.maxSpeed = 1.8 * sizeMultiplier; this.turnSpeed = 0.15;
             } else if (type === 'tank') {
                 this.radius = baseUnitSize * 1.4 * sizeMultiplier; this.health = 200; this.maxHealth = 200;
-                // FIXED: Same damage for both teams - BALANCED!
-                this.attackPower = 19; // Was: team === 'red' ? 18 : 20
+                this.attackPower = 19;
                 this.attackCooldown = 800;
                 this.maxSpeed = 1.0 * sizeMultiplier; this.turnSpeed = 0.1;
             } else if (type === 'healer') {
@@ -333,8 +333,7 @@ function initGame() {
                 this.isCharging = false; this.missChance = 0.35; this.lastShot = 0;
             } else if (type === 'cavalry') {
                 this.radius = baseUnitSize * 1.1 * sizeMultiplier; this.health = 120; this.maxHealth = 120;
-                // FIXED: Same damage for both teams - BALANCED!
-                this.attackPower = 16; // Was: team === 'red' ? 15 : 17
+                this.attackPower = 16;
                 this.attackCooldown = 500;
                 this.maxSpeed = 2.8 * sizeMultiplier; this.turnSpeed = 0.08;
                 this.baseSpeed = 1.2 * sizeMultiplier; this.currentSpeed = this.baseSpeed;
@@ -346,12 +345,18 @@ function initGame() {
             }
             
             this.lastAttack = 0; this.lastHeal = 0; this.velX = 0; this.velY = 0;
-            this.id = Math.random().toString(36).substr(2, 9); this.facingAngle = 0;
+            this.id = Math.random().toString(36).substr(2, 9); 
+            // Set initial facing based on team - BLUE faces LEFT, RED faces RIGHT
+            this.facingAngle = this.team === 'blue' ? Math.PI : 0;
             this.lastHealth = this.health; this.totalDamageDealt = 0; this.kills = 0;
         }
 
         draw() {
-            if (Math.abs(this.velX) > 0.1 || Math.abs(this.velY) > 0.1) this.facingAngle = Math.atan2(this.velY, this.velX);
+            // Update facing based on movement
+            if (Math.abs(this.velX) > 0.1 || Math.abs(this.velY) > 0.1) {
+                this.facingAngle = Math.atan2(this.velY, this.velX);
+            }
+            
             const gradient = ctx.createRadialGradient(this.x - 3, this.y - 3, 3, this.x, this.y, this.radius);
             
             if (this.team === 'red') {
@@ -382,17 +387,18 @@ function initGame() {
             } else if (this.type === 'musketeer') {
                 ctx.save(); 
                 ctx.translate(this.x, this.y); 
-                // Blue team faces left toward enemy, Red team faces right toward enemy
+                
+                // BLUE TEAM FACES LEFT, RED TEAM FACES RIGHT
                 if (this.team === 'blue') {
                     ctx.rotate(this.facingAngle + Math.PI); // Faces LEFT toward enemy
                 } else {
                     ctx.rotate(this.facingAngle); // Faces RIGHT toward enemy
                 }
                 
-                // Draw musket - ALWAYS points toward enemy (right for red, left for blue)
-                let musketStart = this.team === 'blue' ? this.radius : -this.radius;
-                let musketEnd = this.team === 'blue' ? -this.radius : this.radius;
-                let barrelPos = this.team === 'blue' ? -this.radius : this.radius;
+                // Draw musket - barrel points toward enemy
+                let musketStart = this.team === 'blue' ? this.radius * 0.6 : -this.radius * 0.6;
+                let musketEnd = this.team === 'blue' ? -this.radius * 0.8 : this.radius * 0.8;
+                let barrelPos = this.team === 'blue' ? -this.radius * 0.8 : this.radius * 0.8;
                 
                 ctx.beginPath(); 
                 ctx.moveTo(musketStart, 0); 
@@ -433,14 +439,15 @@ function initGame() {
             } else if (this.type === 'cavalry') {
                 ctx.save(); 
                 ctx.translate(this.x, this.y); 
-                // Blue team faces left toward enemy, Red team faces right toward enemy
+                
+                // BLUE TEAM FACES LEFT, RED TEAM FACES RIGHT
                 if (this.team === 'blue') {
                     ctx.rotate(this.facingAngle + Math.PI); // Faces LEFT toward enemy
                 } else {
                     ctx.rotate(this.facingAngle); // Faces RIGHT toward enemy
                 }
                 
-                // Draw cavalry body - horse head at FRONT (right for red, left for blue)
+                // Draw cavalry body
                 let bodyWidth = this.radius * 1.2;
                 let bodyHeight = this.radius * 0.8;
                 let headX = this.team === 'blue' ? -bodyWidth : bodyWidth;
@@ -503,6 +510,7 @@ function initGame() {
                 }
             }
             
+            // Health bar
             const barWidth = this.radius * 2;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
             ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth, 4);
