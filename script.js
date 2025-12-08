@@ -632,447 +632,611 @@ function initGame() {
                                 const finalDamage = !this.hasUsedFirstCharge ? Math.floor(actualDamage * 1.5) : actualDamage;
                                 closestEnemy.health -= finalDamage; this.lastAttack = now; this.totalDamageDealt += finalDamage;
                                 if (finalDamage > highestSingleDamage) highestSingleDamage = finalDamage;
-                                damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, finalDamage, false, isCritical || !this.hasUsedFirstCharge));
-                                attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, true));
-                                if (!this.hasUsedFirstCharge) this.hasUsedFirstCharge = true;
-                                this.isCharging = false; this.chargeBoost = 0; this.chargeTarget = null;
+                                damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius, finalDamage, false, isCritical));
+                                attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, isCritical));
+                                
+                                if (closestEnemy.health <= 0) {
+                                    this.kills++;
+                                    totalKills++;
+                                }
                             }
                         }
+                        return;
                     }
-                    return;
                 }
                 
-                let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
-                let dist = Math.hypot(dx, dy);
-                let desiredX = dx / dist, desiredY = dy / dist;
-                let touchDistance = this.radius + closestEnemy.radius + 1;
-                if (dist > touchDistance) {
-                    let speed = this.baseSpeed;
-                    this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
-                    this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
-                    this.x += this.velX; this.y += this.velY;
-                } else { this.velX *= 0.7; this.velY *= 0.7; }
-                if (dist <= touchDistance) {
-                    let now = performance.now();
+                // Normal movement when not charging
+                const safeDistance = this.radius * 3;
+                if (distToEnemy > safeDistance) {
+                    let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist > 0) {
+                        const desiredX = dx / dist; const desiredY = dy / dist;
+                        this.velX = this.velX * 0.9 + desiredX * this.turnSpeed;
+                        this.velY = this.velY * 0.9 + desiredY * this.turnSpeed;
+                        const speed = Math.hypot(this.velX, this.velY);
+                        if (speed > this.baseSpeed) {
+                            this.velX = this.velX / speed * this.baseSpeed;
+                            this.velY = this.velY / speed * this.baseSpeed;
+                        }
+                    }
+                } else {
+                    this.velX *= 0.95;
+                    this.velY *= 0.95;
+                }
+                
+                this.x += this.velX;
+                this.y += this.velY;
+                this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
+                this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
+                
+                // Attack when close enough
+                if (distToEnemy <= this.radius + closestEnemy.radius + 5) {
                     if (now - this.lastAttack >= this.attackCooldown) {
                         const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                         const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                         const isCritical = damageMultiplier > 1.5;
-                        closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                        closestEnemy.health -= actualDamage;
+                        this.lastAttack = now;
+                        this.totalDamageDealt += actualDamage;
                         if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
-                        damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                        attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
+                        damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius, actualDamage, false, isCritical));
+                        attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, isCritical));
+                        
+                        if (closestEnemy.health <= 0) {
+                            this.kills++;
+                            totalKills++;
+                        }
                     }
                 }
                 return;
             }
-
+            
             // MUSKETEER AI
             if (this.type === 'musketeer') {
                 if (enemies.length === 0) return;
                 let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
                 let distToEnemy = this.distanceTo(closestEnemy);
-                if (distToEnemy < this.bayonetRange) {
+                let now = performance.now();
+                
+                // Handle bayonet charging
+                if (distToEnemy <= this.bayonetRange) {
                     this.isCharging = true;
-                    let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
-                    let dist = Math.hypot(dx, dy);
-                    if (dist > 0) {
-                        const desiredX = dx / dist; const desiredY = dy / dist;
-                        const chargeSpeed = this.maxSpeed * 1.1;
-                        this.velX += (desiredX * chargeSpeed - this.velX) * this.turnSpeed;
-                        this.velY += (desiredY * chargeSpeed - this.velY) * this.turnSpeed;
-                        this.x += this.velX; this.y += this.velY;
-                    }
-                    let touchDistance = this.radius + closestEnemy.radius + 1;
-                    if (distToEnemy <= touchDistance) {
-                        let now = performance.now();
-                        if (now - this.lastAttack >= this.attackCooldown * 0.5) {
+                    if (distToEnemy <= this.radius + closestEnemy.radius + 5) {
+                        if (now - this.lastAttack >= this.attackCooldown) {
                             const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
-                            const actualDamage = Math.floor(this.attackPower * 0.7 * damageMultiplier);
+                            const actualDamage = Math.floor(this.attackPower * 0.6 * damageMultiplier);
                             const isCritical = damageMultiplier > 1.5;
-                            closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                            closestEnemy.health -= actualDamage;
+                            this.lastAttack = now;
+                            this.totalDamageDealt += actualDamage;
                             if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
-                            damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                            attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
+                            damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius, actualDamage, false, isCritical));
+                            attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, isCritical));
+                            
+                            if (closestEnemy.health <= 0) {
+                                this.kills++;
+                                totalKills++;
+                            }
                         }
                     }
+                    
+                    // Move towards enemy for bayonet charge
+                    if (distToEnemy > this.radius + closestEnemy.radius + 2) {
+                        let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                        let dist = Math.hypot(dx, dy);
+                        if (dist > 0) {
+                            this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                            this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                            const speed = Math.hypot(this.velX, this.velY);
+                            if (speed > this.maxSpeed) {
+                                this.velX = this.velX / speed * this.maxSpeed;
+                                this.velY = this.velY / speed * this.maxSpeed;
+                            }
+                        }
+                    } else {
+                        this.velX *= 0.95;
+                        this.velY *= 0.95;
+                    }
                 } else {
-                    if (this.isCharging) { this.isCharging = false; this.lastShot = performance.now(); }
-                    this.velX *= 0.9; this.velY *= 0.9;
-                    let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
-                    this.facingAngle = Math.atan2(dy, dx);
+                    this.isCharging = false;
+                    
+                    // Handle shooting
                     if (distToEnemy <= this.shootingRange) {
-                        let now = performance.now();
                         if (now - this.lastShot >= this.attackCooldown) {
+                            this.lastShot = now;
+                            
+                            // Check for miss
                             const miss = Math.random() < this.missChance;
-                            if (!miss) {
+                            let actualHitX = closestEnemy.x;
+                            let actualHitY = closestEnemy.y;
+                            
+                            if (miss) {
+                                actualHitX = closestEnemy.x + (Math.random() - 0.5) * 40;
+                                actualHitY = closestEnemy.y + (Math.random() - 0.5) * 40;
+                                damageTexts.push(new DamageText(actualHitX, actualHitY, 0, false, false, true));
+                            } else {
                                 const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                                 const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                                 const isCritical = damageMultiplier > 1.5;
-                                closestEnemy.health -= actualDamage; this.totalDamageDealt += actualDamage; this.lastShot = now;
+                                closestEnemy.health -= actualDamage;
+                                this.totalDamageDealt += actualDamage;
                                 if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
-                                damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
-                                attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
-                            } else { damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, 0, false, false, true)); }
-                            musketEffects.push(new MusketEffect(this.x, this.y, closestEnemy.x, closestEnemy.y, !miss));
-                            this.lastShot = now;
+                                damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius, actualDamage, false, isCritical));
+                                
+                                if (closestEnemy.health <= 0) {
+                                    this.kills++;
+                                    totalKills++;
+                                }
+                            }
+                            
+                            musketEffects.push(new MusketEffect(this.x, this.y, actualHitX, actualHitY, !miss));
+                        }
+                        
+                        // Back away while reloading
+                        const dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist > 0 && dist < this.shootingRange * 0.7) {
+                            this.velX = this.velX * 0.9 - (dx / dist) * this.turnSpeed;
+                            this.velY = this.velY * 0.9 - (dy / dist) * this.turnSpeed;
+                            const speed = Math.hypot(this.velX, this.velY);
+                            if (speed > this.maxSpeed * 0.8) {
+                                this.velX = this.velX / speed * (this.maxSpeed * 0.8);
+                                this.velY = this.velY / speed * (this.maxSpeed * 0.8);
+                            }
+                        } else {
+                            this.velX *= 0.95;
+                            this.velY *= 0.95;
                         }
                     } else {
-                        if (distToEnemy > 0) {
-                            const desiredX = dx / distToEnemy; const desiredY = dy / distToEnemy;
-                            this.velX += (desiredX * this.maxSpeed * 0.7 - this.velX) * this.turnSpeed;
-                            this.velY += (desiredY * this.maxSpeed * 0.7 - this.velY) * this.turnSpeed;
-                            this.x += this.velX; this.y += this.velY;
-                        }
-                    }
-                }
-                return;
-            }
-
-            // HEALER AI
-            if (this.type === 'healer') {
-                let healingCandidates = [];
-                
-                for (let ally of allies) {
-                    if (ally === this || ally.health <= 0) continue;
-                    
-                    let priority = 0;
-                    const healthPercent = ally.health / ally.maxHealth;
-                    
-                    priority += (1 - healthPercent) * 100;
-                    
-                    if (ally.type !== 'healer') {
-                        priority += 50;
-                        
-                        if (ally.type === 'tank') priority += 30;
-                        if (ally.type === 'cavalry') priority += 20;
-                        
-                        const closeEnemies = enemies.filter(e => this.distanceTo(e) < 100);
-                        if (closeEnemies.length > 0) {
-                            priority += 40;
-                        }
-                    } else {
-                        priority -= 80;
-                    }
-                    
-                    const distance = this.distanceTo(ally);
-                    priority -= distance * 0.5;
-                    
-                    if (healthPercent < 0.9) {
-                        healingCandidates.push({
-                            ally: ally,
-                            priority: priority,
-                            healthPercent: healthPercent,
-                            distance: distance
-                        });
-                    }
-                }
-                
-                healingCandidates.sort((a, b) => b.priority - a.priority);
-                
-                if (healingCandidates.length > 0) {
-                    let target = healingCandidates[0].ally;
-                    let distToTarget = this.distanceTo(target);
-                    
-                    if (distToTarget > this.healRange + 5) {
-                        let dx = target.x - this.x, dy = target.y - this.y;
+                        // Move towards enemy
+                        let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
                         let dist = Math.hypot(dx, dy);
                         if (dist > 0) {
-                            const desiredX = dx / dist; const desiredY = dy / dist;
-                            const moveSpeed = Math.min(this.maxSpeed, distToTarget - this.healRange) * 0.7;
-                            this.velX += (desiredX * moveSpeed - this.velX) * this.turnSpeed;
-                            this.velY += (desiredY * moveSpeed - this.velY) * this.turnSpeed;
-                            this.x += this.velX; this.y += this.velY;
+                            this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                            this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                            const speed = Math.hypot(this.velX, this.velY);
+                            if (speed > this.maxSpeed) {
+                                this.velX = this.velX / speed * this.maxSpeed;
+                                this.velY = this.velY / speed * this.maxSpeed;
+                            }
+                        }
+                    }
+                }
+                
+                this.x += this.velX;
+                this.y += this.velY;
+                this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
+                this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
+                return;
+            }
+            
+            // HEALER AI
+            if (this.type === 'healer') {
+                let now = performance.now();
+                
+                // Find injured ally to heal
+                if (!this.currentHealTarget || this.currentHealTarget.health <= 0 || 
+                    this.distanceTo(this.currentHealTarget) > this.healRange || 
+                    this.currentHealTarget.health >= this.currentHealTarget.maxHealth) {
+                    
+                    this.currentHealTarget = null;
+                    let injuredAllies = allies.filter(a => a !== this && a.health < a.maxHealth);
+                    if (injuredAllies.length > 0) {
+                        // Find most injured ally
+                        this.currentHealTarget = injuredAllies.reduce((a, b) => 
+                            (a.health / a.maxHealth) < (b.health / b.maxHealth) ? a : b
+                        );
+                    }
+                }
+                
+                if (this.currentHealTarget) {
+                    let distToTarget = this.distanceTo(this.currentHealTarget);
+                    
+                    if (distToTarget <= this.healRange) {
+                        // Heal the target
+                        if (now - this.lastHeal >= this.healCooldown) {
+                            const healAmount = Math.min(this.healPower, this.currentHealTarget.maxHealth - this.currentHealTarget.health);
+                            this.currentHealTarget.health += healAmount;
+                            this.lastHeal = now;
+                            healingEffects.push(new HealingEffect(this.x, this.y, this.currentHealTarget.x, this.currentHealTarget.y, healAmount));
+                            damageTexts.push(new DamageText(this.currentHealTarget.x, this.currentHealTarget.y - this.currentHealTarget.radius, healAmount, true));
+                        }
+                        
+                        // Maintain distance
+                        if (distToTarget < this.healRange * 0.3) {
+                            let dx = this.x - this.currentHealTarget.x, dy = this.y - this.currentHealTarget.y;
+                            let dist = Math.hypot(dx, dy);
+                            if (dist > 0) {
+                                this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                                this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                            }
+                        } else {
+                            this.velX *= 0.95;
+                            this.velY *= 0.95;
                         }
                     } else {
-                        this.velX *= 0.8; this.velY *= 0.8;
-                        let now = performance.now();
-                        if (now - this.lastHeal >= this.healCooldown) {
-                            const healAmount = Math.min(this.healPower, target.maxHealth - target.health);
-                            if (healAmount > 0) {
-                                target.health += healAmount; this.lastHeal = now;
-                                const healEffect = new HealingEffect(this.x, this.y, target.x, target.y, healAmount);
-                                healEffect.healingUnitId = target.id; healingEffects.push(healEffect);
-                                damageTexts.push(new DamageText(target.x, target.y - target.radius - 10, healAmount, true));
+                        // Move towards target
+                        let dx = this.currentHealTarget.x - this.x, dy = this.currentHealTarget.y - this.y;
+                        let dist = Math.hypot(dx, dy);
+                        if (dist > 0) {
+                            this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                            this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                            const speed = Math.hypot(this.velX, this.velY);
+                            if (speed > this.maxSpeed) {
+                                this.velX = this.velX / speed * this.maxSpeed;
+                                this.velY = this.velY / speed * this.maxSpeed;
                             }
                         }
                     }
                 } else {
+                    // No one to heal, follow closest ally
                     if (allies.length > 1) {
-                        let combatAllies = allies.filter(a => a !== this && a.type !== 'healer');
-                        if (combatAllies.length > 0) {
-                            let avgX = 0, avgY = 0;
-                            combatAllies.forEach(ally => { avgX += ally.x; avgY += ally.y; });
-                            avgX /= combatAllies.length; avgY /= combatAllies.length;
-                            
-                            let dx = avgX - this.x, dy = avgY - this.y;
-                            let dist = Math.hypot(dx, dy);
-                            if (dist > this.healRange * 0.7) {
-                                const desiredX = dx / dist; const desiredY = dy / dist;
-                                this.velX += (desiredX * this.maxSpeed * 0.4 - this.velX) * this.turnSpeed;
-                                this.velY += (desiredY * this.maxSpeed * 0.4 - this.velY) * this.turnSpeed;
+                        let closestAlly = allies.filter(a => a !== this).reduce((a, b) => 
+                            this.distanceTo(a) < this.distanceTo(b) ? a : b
+                        );
+                        
+                        let dx = closestAlly.x - this.x, dy = closestAlly.y - this.y;
+                        let dist = Math.hypot(dx, dy);
+                        
+                        if (dist > this.healRange * 0.5) {
+                            this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                            this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                            const speed = Math.hypot(this.velX, this.velY);
+                            if (speed > this.maxSpeed) {
+                                this.velX = this.velX / speed * this.maxSpeed;
+                                this.velY = this.velY / speed * this.maxSpeed;
                             }
-                            this.x += this.velX; this.y += this.velY;
+                        } else {
+                            this.velX *= 0.95;
+                            this.velY *= 0.95;
                         }
+                    } else {
+                        this.velX *= 0.95;
+                        this.velY *= 0.95;
                     }
                 }
+                
+                this.x += this.velX;
+                this.y += this.velY;
+                this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
+                this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
                 return;
             }
-
-            // DEFAULT COMBAT AI for soldiers and tanks
-            if (enemies.length === 0) return;
-            let target = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
-            let dx = target.x - this.x, dy = target.y - this.y;
-            let dist = Math.hypot(dx, dy);
-            let desiredX = dx / dist, desiredY = dy / dist;
-            let touchDistance = this.radius + target.radius + 1;
             
-            if (dist > touchDistance) {
-                let speed = this.maxSpeed;
-                this.velX += (desiredX * speed - this.velX) * this.turnSpeed;
-                this.velY += (desiredY * speed - this.velY) * this.turnSpeed;
-                this.x += this.velX; this.y += this.velY;
-            } else { this.velX *= 0.7; this.velY *= 0.7; }
-
-            if (dist <= touchDistance) {
+            // SOLDIER & TANK AI (DEFAULT)
+            if (enemies.length === 0) return;
+            let closestEnemy = enemies.reduce((a, b) => this.distanceTo(a) < this.distanceTo(b) ? a : b);
+            let distToEnemy = this.distanceTo(closestEnemy);
+            
+            const safeDistance = this.radius * 3;
+            if (distToEnemy > safeDistance) {
+                let dx = closestEnemy.x - this.x, dy = closestEnemy.y - this.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > 0) {
+                    this.velX = this.velX * 0.9 + (dx / dist) * this.turnSpeed;
+                    this.velY = this.velY * 0.9 + (dy / dist) * this.turnSpeed;
+                    const speed = Math.hypot(this.velX, this.velY);
+                    if (speed > this.maxSpeed) {
+                        this.velX = this.velX / speed * this.maxSpeed;
+                        this.velY = this.velY / speed * this.maxSpeed;
+                    }
+                }
+            } else {
+                this.velX *= 0.95;
+                this.velY *= 0.95;
+            }
+            
+            this.x += this.velX;
+            this.y += this.velY;
+            this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
+            this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
+            
+            if (distToEnemy <= this.radius + closestEnemy.radius + 5) {
                 let now = performance.now();
                 if (now - this.lastAttack >= this.attackCooldown) {
-                    const damageMultiplier = getDirectionalDamageMultiplier(this, target);
+                    const damageMultiplier = getDirectionalDamageMultiplier(this, closestEnemy);
                     const actualDamage = Math.floor(this.attackPower * damageMultiplier);
                     const isCritical = damageMultiplier > 1.5;
-                    target.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
+                    closestEnemy.health -= actualDamage;
+                    this.lastAttack = now;
+                    this.totalDamageDealt += actualDamage;
                     if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
-                    damageTexts.push(new DamageText(target.x, target.y - target.radius - 8, actualDamage, false, isCritical));
-                    attackEffects.push(new AttackEffect(target.x + (Math.random() - 0.5) * 8, target.y + (Math.random() - 0.5) * 8, this.team, isCritical));
+                    damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius, actualDamage, false, isCritical));
+                    attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, isCritical));
+                    
+                    if (closestEnemy.health <= 0) {
+                        this.kills++;
+                        totalKills++;
+                    }
                 }
             }
         }
     }
 
-    function saveOriginalPlacements() {
-        originalCircles = circles.map(circle => ({
-            x: circle.x, y: circle.y, team: circle.team, type: circle.type,
-            health: circle.maxHealth, maxHealth: circle.maxHealth, radius: circle.radius,
-            hasUsedFirstCharge: circle.type === 'cavalry' ? circle.hasUsedFirstCharge : undefined
-        }));
-        totalKills = 0; highestSingleDamage = 0;
-    }
-
-    function restoreOriginalPlacements() {
-        circles = []; attackEffects = []; musketEffects = []; healingEffects = []; damageTexts = [];
-        originalCircles.forEach(original => {
-            const circle = new Circle(original.x, original.y, original.team, original.type);
-            circle.health = original.maxHealth; circle.maxHealth = original.maxHealth;
-            if (original.type === 'cavalry' && original.hasUsedFirstCharge === false) {
-                circle.hasUsedFirstCharge = false;
-                circle.lastCharge = performance.now() - circle.chargeCooldown - 10000;
-            }
-            circles.push(circle);
-        });
-        gameRunning = false; showGhost = true; battleStartTime = 0; battleDuration = 0;
-        totalKills = 0; highestSingleDamage = 0; playAgainHeaderBtn.style.display = 'none';
-        updateStartPauseButton();
-    }
-
-    function playAgain() { 
-        gameOverModal.style.display = 'none'; 
-        restoreOriginalPlacements(); 
-        placingMode = "soldier"; 
-        updateActiveButton(); 
-        showNotification('Game reset', 'info'); 
-    }
-
-    function updateStartPauseButton() {
-        if (gameRunning) {
-            startPauseBtn.innerHTML = '⏸️ Pause';
-            startPauseBtn.classList.add('pause');
-        } else {
-            startPauseBtn.innerHTML = '▶️ Start';
-            startPauseBtn.classList.remove('pause');
-        }
-    }
-
-    function getCanvasMousePos(event) {
+    // Event Listeners
+    canvas.addEventListener("mousemove", (e) => {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        let clientX, clientY;
-        if (event.type.includes('touch')) { clientX = event.touches[0].clientX; clientY = event.touches[0].clientY; }
-        else { clientX = event.clientX; clientY = event.clientY; }
-        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
-    }
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+    });
 
-    function handleCanvasClick(x, y) {
-        if (gameRunning) return;
+    canvas.addEventListener("mouseleave", () => {
+        showGhost = false;
+    });
+
+    canvas.addEventListener("mouseenter", () => {
+        showGhost = true;
+    });
+
+    canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Check if click is within map bounds
+        if (x < mapPadding || x > canvas.width - mapPadding || y < mapPadding || y > canvas.height - mapPadding) {
+            showNotification("Click inside the battlefield!", "error");
+            return;
+        }
+
+        // Delete mode
+        if (placingMode === "delete") {
+            let deleted = false;
+            circles = circles.filter(circle => {
+                const dist = Math.hypot(circle.x - x, circle.y - y);
+                if (dist <= circle.radius) {
+                    deleted = true;
+                    return false;
+                }
+                return true;
+            });
+            if (deleted) {
+                showNotification("Unit deleted", "warning");
+                updateCounts();
+            }
+            return;
+        }
+
+        // Determine team based on click position
+        const team = x < canvas.width / 2 ? "red" : "blue";
         const settings = UNIT_SETTINGS[placingMode];
         const radius = baseUnitSize * settings.radiusMultiplier * (Math.min(canvas.width, canvas.height) / 800);
-        const withinBounds = x > mapPadding + radius && x < canvas.width - mapPadding - radius && y > mapPadding + radius && y < canvas.height - mapPadding - radius;
-        if (!withinBounds) { showNotification('Cannot place outside battlefield', 'warning'); return; }
 
-        if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer" || placingMode === "cavalry") {
-            let type = placingMode; let team = x < canvas.width/2 ? 'red' : 'blue';
-            let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
-            if (!blocked) { circles.push(new Circle(x, y, team, type)); showNotification(`${type} placed`, 'info'); }
-            else showNotification('Space occupied', 'warning');
-        } else if (placingMode === "delete") {
-            const beforeCount = circles.length;
-            circles = circles.filter(c => Math.hypot(c.x - x, c.y - y) > c.radius);
-            if (circles.length < beforeCount) showNotification('Unit deleted', 'warning');
+        // Check for overlapping units
+        const overlapping = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
+        if (overlapping) {
+            showNotification("Units cannot overlap!", "error");
+            return;
+        }
+
+        // Add the new unit
+        circles.push(new Circle(x, y, team, placingMode));
+        showNotification(`${team.toUpperCase()} ${placingMode} deployed!`, "info");
+        updateCounts();
+    });
+
+    // Unit selection buttons
+    document.querySelectorAll('.unit-controls button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            placingMode = btn.dataset.type;
+            updateActiveButton();
+            
+            let message = `Selected: ${placingMode}`;
+            if (placingMode === 'delete') message = "Click units to delete them";
+            showNotification(message, 'info');
+        });
+    });
+
+    // Game controls
+    startPauseBtn.addEventListener('click', () => {
+        if (circles.length < 2) {
+            showNotification("Place at least 2 units to start!", "error");
+            return;
+        }
+
+        if (!gameRunning) {
+            // Save original state if this is the first start
+            if (originalCircles.length === 0) {
+                originalCircles = JSON.parse(JSON.stringify(circles));
+                circles.forEach(c => {
+                    c.originalHealth = c.health;
+                    c.totalDamageDealt = 0;
+                    c.kills = 0;
+                });
+                battleStartTime = performance.now();
+            }
+            
+            gameRunning = true;
+            startPauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Battle';
+            startPauseBtn.classList.add('paused');
+            gameStatusEl.textContent = "Battle in Progress";
+            showNotification("Battle started!", "info");
+        } else {
+            gameRunning = false;
+            startPauseBtn.innerHTML = '<i class="fas fa-play"></i> Resume Battle';
+            startPauseBtn.classList.remove('paused');
+            gameStatusEl.textContent = "Battle Paused";
+            showNotification("Battle paused", "warning");
+        }
+    });
+
+    playAgainHeaderBtn.addEventListener('click', () => {
+        resetGame();
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+        resetGame();
+        gameOverModal.classList.remove('show');
+    });
+
+    // Speed controls
+    document.querySelectorAll('.speed-controls button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gameSpeed = parseFloat(btn.dataset.speed);
+            document.querySelectorAll('.speed-controls button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showNotification(`Game speed: ${gameSpeed}x`, 'info');
+        });
+    });
+
+    // Update statistics
+    function updateCounts() {
+        const redCount = circles.filter(c => c.team === 'red').length;
+        const blueCount = circles.filter(c => c.team === 'blue').length;
+        
+        redCountEl.textContent = redCount;
+        blueCountEl.textContent = blueCount;
+        totalCountEl.textContent = circles.length;
+    }
+
+    function updateBattleTime() {
+        if (gameRunning && battleStartTime > 0) {
+            battleDuration = (performance.now() - battleStartTime) / 1000;
+            const minutes = Math.floor(battleDuration / 60);
+            const seconds = Math.floor(battleDuration % 60);
+            battleTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
     }
 
-    // Event Listeners setup
-    function setupEventListeners() {
-        canvas.addEventListener("mousemove", e => { const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; });
-        canvas.addEventListener("click", e => { const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); });
-        canvas.addEventListener("touchmove", e => { e.preventDefault(); const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; }, { passive: false });
-        canvas.addEventListener("touchstart", e => { e.preventDefault(); const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); }, { passive: false });
-
-        // Unit buttons
-        document.querySelectorAll('.unit-controls button').forEach(btn => {
-            if (btn.dataset.type) {
-                btn.onclick = () => { 
-                    placingMode = btn.dataset.type; 
-                    showNotification(`Placing: ${btn.textContent.replace(/[^a-zA-Z]/g, '')}`, 'info'); 
-                    showGhost = true; 
-                    updateActiveButton();
-                };
-            }
-        });
-
-        // Control buttons
-        document.getElementById("deleteTool").onclick = () => { 
-            placingMode = "delete"; 
-            showNotification("Delete Tool", 'warning'); 
-            showGhost = false; 
-            updateActiveButton();
-        };
+    function resetGame() {
+        circles = [];
+        attackEffects = [];
+        musketEffects = [];
+        healingEffects = [];
+        damageTexts = [];
+        gameRunning = false;
+        battleStartTime = 0;
+        battleDuration = 0;
+        originalCircles = [];
+        totalKills = 0;
+        highestSingleDamage = 0;
         
-        document.getElementById("deleteAllBtn").onclick = () => {
-            if (circles.length > 0) {
-                circles = [];
-                showNotification('All units deleted', 'warning');
-            } else {
-                showNotification('No units to delete', 'info');
-            }
-        };
+        // Restore from original if exists
+        if (originalCircles.length > 0) {
+            circles = JSON.parse(JSON.stringify(originalCircles));
+            circles.forEach(c => {
+                c.health = c.originalHealth || c.maxHealth;
+                c.totalDamageDealt = 0;
+                c.kills = 0;
+            });
+        }
         
-        document.getElementById("startPauseBtn").onclick = () => {
-            if (circles.length === 0) { 
-                showNotification('Place units first', 'warning'); 
-                return; 
-            }
-            
-            if (!gameRunning) {
-                if (battleStartTime === 0) saveOriginalPlacements();
-                gameRunning = true; 
-                showGhost = false;
-                if (battleStartTime === 0) battleStartTime = performance.now();
-                showNotification("Battle started", 'info');
-                gameStatusEl.textContent = "Running";
-            } else {
-                gameRunning = false; 
-                showGhost = true; 
-                showNotification("Battle paused", 'warning');
-                gameStatusEl.textContent = "Paused";
-            }
-            
-            updateStartPauseButton();
-        };
+        startPauseBtn.innerHTML = '<i class="fas fa-play"></i> Start Battle';
+        startPauseBtn.classList.remove('paused');
+        gameStatusEl.textContent = "Ready for Battle";
         
-        document.getElementById("autoPlaceBtn").onclick = () => {
-            circles = []; 
-            const padding = mapPadding + 30;
-            
-            // Red Team
-            for (let i = 0; i < 4; i++) circles.push(new Circle(padding + Math.random() * (canvas.width/2 - padding*2), padding + Math.random() * (canvas.height - padding*2), 'red', 'soldier'));
-            circles.push(new Circle(padding + 40, canvas.height/2 - 60, 'red', 'tank'));
-            circles.push(new Circle(padding + 80, canvas.height/2 + 60, 'red', 'tank'));
-            circles.push(new Circle(padding + 60, canvas.height/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 100, canvas.height*2/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 120, canvas.height/4, 'red', 'musketeer'));
-            circles.push(new Circle(padding + 140, canvas.height*3/4, 'red', 'musketeer'));
-            circles.push(new Circle(padding + 160, canvas.height/5, 'red', 'cavalry'));
-            circles.push(new Circle(padding + 180, canvas.height*4/5, 'red', 'cavalry'));
-            
-            // Blue Team
-            for (let i = 0; i < 4; i++) circles.push(new Circle(canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2), padding + Math.random() * (canvas.height - padding*2), 'blue', 'soldier'));
-            circles.push(new Circle(canvas.width - padding - 40, canvas.height/2 - 60, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 80, canvas.height/2 + 60, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 60, canvas.height/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 100, canvas.height*2/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 120, canvas.height/4, 'blue', 'musketeer'));
-            circles.push(new Circle(canvas.width - padding - 140, canvas.height*3/4, 'blue', 'musketeer'));
-            circles.push(new Circle(canvas.width - padding - 160, canvas.height/5, 'blue', 'cavalry'));
-            circles.push(new Circle(canvas.width - padding - 180, canvas.height*4/5, 'blue', 'cavalry'));
-            
-            showNotification('Auto-placed armies', 'info');
-        };
-        
-        playAgainHeaderBtn.onclick = () => { playAgain(); };
-        playAgainBtn.onclick = () => { playAgain(); };
+        updateCounts();
+        battleTimeEl.textContent = "00:00";
+        showNotification("Game reset", "info");
     }
 
+    function checkGameOver() {
+        const redUnits = circles.filter(c => c.team === 'red' && c.health > 0);
+        const blueUnits = circles.filter(c => c.team === 'blue' && c.health > 0);
+        
+        if (redUnits.length === 0 || blueUnits.length === 0) {
+            gameRunning = false;
+            startPauseBtn.innerHTML = '<i class="fas fa-play"></i> Start Battle';
+            startPauseBtn.classList.remove('paused');
+            gameStatusEl.textContent = "Battle Ended";
+            
+            let winner = redUnits.length > 0 ? 'Red' : 'Blue';
+            let winnerColor = redUnits.length > 0 ? '#e74c3c' : '#3498db';
+            let remainingUnits = Math.max(redUnits.length, blueUnits.length);
+            
+            // Update modal content
+            winnerTextEl.textContent = `${winner} Team Wins!`;
+            winnerTextEl.style.color = winnerColor;
+            
+            const minutes = Math.floor(battleDuration / 60);
+            const seconds = Math.floor(battleDuration % 60);
+            finalTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            remainingUnitsEl.textContent = remainingUnits;
+            totalKillsEl.textContent = totalKills;
+            highestDamageEl.textContent = highestSingleDamage;
+            
+            // Show modal after a brief delay
+            setTimeout(() => {
+                gameOverModal.classList.add('show');
+            }, 1000);
+            
+            return true;
+        }
+        return false;
+    }
+
+    // Main game loop
     function gameLoop() {
-        drawMap(); 
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw map
+        drawMap();
+        
+        // Draw ghost unit
         drawGhost();
         
-        const redTeam = circles.filter(c => c.team === "red");
-        const blueTeam = circles.filter(c => c.team === "blue");
-        attackEffects = attackEffects.filter(effect => effect.draw());
-        musketEffects = musketEffects.filter(effect => effect.update()); 
-        musketEffects.forEach(effect => effect.draw());
-        healingEffects = healingEffects.filter(effect => effect.update()); 
-        healingEffects.forEach(effect => effect.draw());
-        damageTexts = damageTexts.filter(text => text.update()); 
-        damageTexts.forEach(text => text.draw());
-
-        for (let c of circles) {
-            let allies = circles.filter(x => x.team === c.team && x.health > 0);
-            let enemies = circles.filter(x => x.team !== c.team && x.health > 0);
-            for (let i = 0; i < gameSpeed; i++) c.updateAI(enemies, allies);
-            c.draw();
-            if (c.health <= 0 && c.lastHealth > 0) totalKills++;
-            c.lastHealth = c.health;
-        }
-
-        circles = circles.filter(c => c.health > 0);
-        const redAlive = circles.filter(c => c.team === "red" && c.health > 0);
-        const blueAlive = circles.filter(c => c.team === "blue" && c.health > 0);
-        redCountEl.textContent = redAlive.length; 
-        blueCountEl.textContent = blueAlive.length;
-        totalCountEl.textContent = circles.length; 
-        
+        // Update and draw circles
         if (gameRunning) {
-            battleDuration = Math.floor((performance.now() - battleStartTime) / 1000);
-            battleTimeEl.textContent = battleDuration + 's';
-            if (redAlive.length === 0 || blueAlive.length === 0) {
-                gameRunning = false; 
-                const winner = redAlive.length > 0 ? 'red' : 'blue';
-                winnerTextEl.textContent = `${winner === 'red' ? '🔴 Red' : '🔵 Blue'} Team Victory!`;
-                winnerTextEl.className = `winner-text ${winner === 'red' ? 'winner-red' : 'winner-blue'}`;
-                finalTimeEl.textContent = battleDuration; 
-                remainingUnitsEl.textContent = winner === 'red' ? redAlive.length : blueAlive.length;
-                totalKillsEl.textContent = totalKills; 
-                highestDamageEl.textContent = highestSingleDamage;
-                gameOverModal.style.display = 'flex'; 
-                playAgainHeaderBtn.style.display = 'flex';
-                showNotification(`${winner === 'red' ? 'Red' : 'Blue'} wins!`, 'info');
-                updateStartPauseButton();
-            }
+            const redUnits = circles.filter(c => c.team === 'red' && c.health > 0);
+            const blueUnits = circles.filter(c => c.team === 'blue' && c.health > 0);
+            
+            // Update each unit
+            circles.forEach(circle => {
+                if (circle.health <= 0) return;
+                
+                const enemies = circle.team === 'red' ? blueUnits : redUnits;
+                const allies = circle.team === 'red' ? redUnits : blueUnits;
+                
+                circle.updateAI(enemies, allies);
+            });
+            
+            // Remove dead units
+            circles = circles.filter(circle => circle.health > 0);
+            
+            // Update battle time
+            updateBattleTime();
+            
+            // Check for game over
+            checkGameOver();
         }
+        
+        // Draw all circles
+        circles.forEach(circle => {
+            if (circle.health > 0) {
+                circle.draw();
+            }
+        });
+        
+        // Update and draw effects
+        attackEffects = attackEffects.filter(effect => effect.draw());
+        musketEffects = musketEffects.filter(effect => {
+            effect.update();
+            effect.draw();
+            return effect.progress <= 1.0 && effect.life > 0;
+        });
+        healingEffects = healingEffects.filter(effect => {
+            effect.update();
+            effect.draw();
+            return effect.progress <= 1.0 && effect.life > 0;
+        });
+        damageTexts = damageTexts.filter(text => {
+            text.update();
+            text.draw();
+            return text.life > 0;
+        });
+        
+        // Update counts
+        updateCounts();
+        
+        // Request next frame
         requestAnimationFrame(gameLoop);
     }
 
-    // Initialize
-    function init() {
-        showNotification('Click to place units', 'info');
-        setupEventListeners();
-        updateActiveButton();
-        updateStartPauseButton();
-        gameLoop();
-    }
-
-    // Start the game
-    init();
+    // Initialize active button
+    updateActiveButton();
+    
+    // Start the game loop
+    gameLoop();
 }
