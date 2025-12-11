@@ -25,6 +25,7 @@ body {
     flex-wrap: wrap;
     gap: 12px;
     min-height: 60px;
+    flex-shrink: 0;
 }
 
 .header h1 { 
@@ -129,6 +130,7 @@ body {
     min-height: 0;
     background: #1a1a1a;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -139,6 +141,9 @@ body {
     flex-direction: column;
     gap: 12px;
     order: 2;
+    height: 100%;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 /* ===== SIDEBAR TABS ===== */
@@ -148,6 +153,7 @@ body {
     border-radius: 8px;
     padding: 4px;
     border: 1px solid #444;
+    flex-shrink: 0;
 }
 
 .sidebar-tab {
@@ -179,10 +185,14 @@ body {
 .sidebar-content {
     display: none;
     animation: fadeIn 0.3s ease;
+    height: calc(100% - 50px);
+    overflow: hidden;
+    flex: 1;
 }
 
 .sidebar-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -190,11 +200,51 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Battle Stats - NO scroll */
+.sidebar-content[data-tab="battle-stats"] {
+    overflow: visible;
+}
+
+/* How to Play - Scrollable */
+.sidebar-content[data-tab="how-to-play"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Unit Info - Scrollable */
+.sidebar-content[data-tab="unit-info"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
 .sidebar-section {
     background: #363636;
     border-radius: 8px;
     padding: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .sidebar-section h3 {
@@ -205,6 +255,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
 }
 
 .stats-title::before { content: "📊"; }
@@ -218,6 +269,7 @@ body {
     padding: 6px 0;
     font-size: 0.8rem;
     border-bottom: 1px solid #404040;
+    flex-shrink: 0;
 }
 
 .stat-row:last-child { border-bottom: none; }
@@ -230,6 +282,14 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding-right: 4px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.how-to-content::-webkit-scrollbar {
+    width: 4px;
 }
 
 .instruction {
@@ -239,6 +299,7 @@ body {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 6px;
     border-left: 3px solid #3498db;
+    flex-shrink: 0;
 }
 
 .instruction-icon {
@@ -246,10 +307,12 @@ body {
     display: flex;
     align-items: flex-start;
     padding-top: 2px;
+    flex-shrink: 0;
 }
 
 .instruction-text {
     flex: 1;
+    min-width: 0;
 }
 
 .instruction-text strong {
@@ -276,6 +339,7 @@ body {
     padding: 4px;
     border-radius: 6px;
     border: 1px solid #444;
+    flex-shrink: 0;
 }
 
 .unit-tab {
@@ -314,6 +378,9 @@ body {
     border-radius: 6px;
     padding: 12px;
     border: 1px solid #444;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .unit-detail {
@@ -382,6 +449,7 @@ body {
     padding: 12px;
     background: #1a1a1a;
     order: 1;
+    overflow: hidden;
 }
 
 #gameCanvas { 
@@ -551,13 +619,18 @@ body {
 @media (min-width: 768px) {
     .main-container { flex-direction: row; }
     .sidebar {
-        width: 200px;
+        width: 220px;
         border-bottom: none;
         border-right: 1px solid #333;
         padding: 16px;
         order: 1;
+        height: calc(100vh - 60px);
     }
-    .game-area { order: 2; padding: 16px; }
+    .game-area { 
+        order: 2; 
+        padding: 16px;
+        height: calc(100vh - 60px);
+    }
     .header { padding: 16px 20px; }
     .header h1 { font-size: 1.5rem; }
     .header button { padding: 12px 16px; font-size: 0.9rem; min-width: 80px; }
@@ -568,14 +641,17 @@ body {
     .sidebar-tab { padding: 12px 8px; font-size: 0.85rem; }
     .unit-tab { font-size: 0.7rem; padding: 8px 4px; }
     .instruction-text p { font-size: 0.7rem; }
+    .sidebar-content {
+        height: calc(100% - 60px);
+    }
 }
 
 @media (min-width: 1200px) {
-    .sidebar { width: 220px; }
+    .sidebar { width: 250px; }
     .header h1 { font-size: 1.6rem; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .header {
         flex-direction: column;
         align-items: stretch;
@@ -596,17 +672,30 @@ body {
         font-size: 0.7rem;
         padding: 6px 3px;
     }
+    .sidebar {
+        max-height: 40vh;
+    }
+    .sidebar-content {
+        max-height: calc(40vh - 50px);
+    }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
     .header { padding: 8px 12px; min-height: 50px; }
     .header h1 { font-size: 1.1rem; }
     .header button { padding: 8px 10px; font-size: 0.8rem; min-width: 60px; }
-    .sidebar { padding: 8px; gap: 8px; }
+    .sidebar { 
+        padding: 8px; 
+        gap: 8px;
+        max-height: 60vh;
+    }
     .sidebar-section { padding: 8px; }
     .modal-content { padding: 20px; }
     .winner-text { font-size: 1.4rem; padding: 15px; margin: 15px 0; }
     .sidebar-tab { padding: 6px 3px; font-size: 0.7rem; }
+    .sidebar-content {
+        max-height: calc(60vh - 40px);
+    }
 }
 
 @media (hover: none) and (pointer: coarse) {
