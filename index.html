@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- BASIC META TAGS -->
     <title>Neon Battle Simulator - Tactical War Game</title>
@@ -42,26 +42,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Mobile Loading Screen -->
+    <div class="mobile-loading" id="mobileLoading">
+        <div style="font-size: 2rem; margin-bottom: 20px; animation: pulse 1.5s infinite;">⚔️</div>
+        <div style="font-size: 1.2rem; margin-bottom: 10px; font-weight: 600;">Loading Battle Simulator...</div>
+        <div style="font-size: 0.9rem; color: #aaa; text-align: center; padding: 0 20px; max-width: 300px;">
+            Tip: Place units on each side and press Start to begin the battle!
+        </div>
+    </div>
+
     <div class="header">
         <h1>Neon Battle Simulator</h1>
         
         <div class="header-controls">
-            <!-- Unit Selection Buttons - SEPARATED GROUP -->
+            <!-- Unit Selection Buttons -->
             <div class="unit-controls">
-                <button class="unit-btn active" id="placeSoldier" data-type="soldier">👤 Soldier</button>
-                <button class="special-btn" id="placeTank" data-type="tank">🛡️ Tank</button>
-                <button class="special-btn" id="placeMusketeer" data-type="musketeer">🎯 Musketeer</button>
-                <button class="special-btn" id="placeHealer" data-type="healer">❤️ Healer</button>
-                <button class="cavalry-btn" id="placeCavalry" data-type="cavalry">🐎 Cavalry</button>
+                <button class="unit-btn active" id="placeSoldier" data-type="soldier" data-short="Sol">👤 Soldier</button>
+                <button class="special-btn" id="placeTank" data-type="tank" data-short="Tank">🛡️ Tank</button>
+                <button class="special-btn" id="placeMusketeer" data-type="musketeer" data-short="Musk">🎯 Musketeer</button>
+                <button class="special-btn" id="placeHealer" data-type="healer" data-short="Heal">❤️ Healer</button>
+                <button class="cavalry-btn" id="placeCavalry" data-type="cavalry" data-short="Cav">🐎 Cavalry</button>
             </div>
             
-            <!-- Game Control Buttons - SEPARATED GROUP -->
+            <!-- Game Control Buttons -->
             <div class="game-controls">
-                <button class="danger-btn" id="deleteTool">🗑️ Delete</button>
-                <button class="delete-all-btn" id="deleteAllBtn">🔥 Delete All</button>
-                <button class="control-btn" id="startPauseBtn">▶️ Start</button>
-                <button class="auto-btn" id="autoPlaceBtn">🤖 Auto Place</button>
-                <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;">🔁 Play Again</button>
+                <button class="danger-btn" id="deleteTool" data-short="Del">🗑️ Delete</button>
+                <button class="delete-all-btn" id="deleteAllBtn" data-short="Clear">🔥 Delete All</button>
+                <button class="control-btn" id="startPauseBtn" data-short="Start">▶️ Start</button>
+                <button class="auto-btn" id="autoPlaceBtn" data-short="Auto">🤖 Auto Place</button>
+                <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;" data-short="Again">🔁 Play Again</button>
             </div>
         </div>
     </div>
@@ -113,7 +122,7 @@
                             <div class="instruction-icon">🎮</div>
                             <div class="instruction-text">
                                 <strong>1. Place Units</strong>
-                                <p>Click on unit buttons, then click on the battlefield to place them. Red side = left, Blue side = right.</p>
+                                <p>Click/Tap unit buttons, then click/tap battlefield to place them. Red side = left, Blue side = right.</p>
                             </div>
                         </div>
                         
@@ -158,6 +167,17 @@
                                    • Tanks as damage absorbers</p>
                             </div>
                         </div>
+                        
+                        <div class="instruction" style="background: rgba(52, 152, 219, 0.1);">
+                            <div class="instruction-icon">📱</div>
+                            <div class="instruction-text">
+                                <strong>Mobile Tips</strong>
+                                <p>• Tap buttons to select units<br>
+                                   • Tap battlefield to place<br>
+                                   • Use Auto Place for quick setup<br>
+                                   • Rotate device for different views</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -195,7 +215,7 @@
                                 <span class="stat-value">Fast</span>
                             </div>
                             <div class="unit-desc">
-                                Balanced infantry unit. Good all-around combatant.
+                                Balanced infantry unit. Good all-around combatant. Perfect for frontline combat.
                             </div>
                         </div>
                         
@@ -218,7 +238,7 @@
                                 <span class="stat-value">Slow</span>
                             </div>
                             <div class="unit-desc">
-                                Heavy armored unit. High health and damage but slow.
+                                Heavy armored unit. High health and damage but slow movement. Best as a damage absorber.
                             </div>
                         </div>
                         
@@ -241,7 +261,7 @@
                                 <span class="stat-value">60</span>
                             </div>
                             <div class="unit-desc">
-                                Support unit. Heals allies automatically.
+                                Support unit. Heals allies automatically. Keep behind front lines for maximum effectiveness.
                             </div>
                         </div>
                         
@@ -264,7 +284,7 @@
                                 <span class="stat-value">35%</span>
                             </div>
                             <div class="unit-desc">
-                                Ranged attacker. High damage but can miss.
+                                Ranged attacker. High damage but can miss. Switches to bayonet when enemies get close.
                             </div>
                         </div>
                         
@@ -287,7 +307,7 @@
                                 <span class="stat-value">25s</span>
                             </div>
                             <div class="unit-desc">
-                                Fast cavalry with charge ability. Great for flanking.
+                                Fast cavalry with charge ability. Great for flanking and disrupting enemy formations.
                             </div>
                         </div>
                     </div>
@@ -318,10 +338,79 @@
         </div>
     </div>
 
+    <!-- Mobile Help Button -->
+    <button class="mobile-help-btn" id="mobileHelpBtn" title="Quick Help">❓</button>
+
     <!-- Game logic -->
     <script src="script.js"></script>
     <!-- How to Play tab functionality -->
     <script src="howtoplay.js"></script>
+    
+    <!-- Mobile-specific enhancements -->
+    <script>
+    // Hide loading screen when game is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const loading = document.getElementById('mobileLoading');
+            if (loading) loading.style.display = 'none';
+        }, 800);
+        
+        // Initialize mobile help button
+        const mobileHelpBtn = document.getElementById('mobileHelpBtn');
+        if (mobileHelpBtn) {
+            mobileHelpBtn.addEventListener('click', function() {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const message = isMobile 
+                    ? '🕹️ MOBILE CONTROLS:\n\n• Tap unit buttons to select\n• Tap battlefield to place\n• Use "Auto Place" for quick setup\n• "Start" begins the battle\n• Rotate device for different views\n\n🎯 TIP: Place healers behind your front line!'
+                    : '🎮 DESKTOP CONTROLS:\n\n• Click unit buttons to select\n• Click battlefield to place\n• Use "Auto Place" for balanced armies\n• "Start" begins the simulation\n• Watch tactical combat unfold\n\n🎯 TIP: Mix unit types for best results!';
+                
+                alert(message);
+            });
+            
+            // Only show on mobile
+            if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                mobileHelpBtn.style.display = 'none';
+            }
+        }
+        
+        // Add touch feedback to buttons
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            btn.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+        
+        // Prevent accidental zooming on canvas
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            canvas.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            canvas.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+    });
+    
+    // Detect device type for analytics/optimization
+    window.isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    window.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    if (window.isMobileDevice) {
+        console.log('Neon Battle Simulator: Mobile mode activated');
+        document.body.classList.add('mobile-device');
+    }
+    </script>
     
     <!-- EMBED SCRIPT FOR DISCORD/MESSENGER -->
     <script type="application/ld+json">
@@ -340,7 +429,9 @@
         },
         "screenshot": "https://stratwargaem.pages.dev/embed-image.png",
         "contentRating": "E",
-        "keywords": "battle simulator, strategy game, war game, tactical, real-time combat"
+        "keywords": "battle simulator, strategy game, war game, tactical, real-time combat",
+        "operatingSystem": "Web Browser",
+        "device": "Desktop, Mobile, Tablet"
     }
     </script>
 </body>
