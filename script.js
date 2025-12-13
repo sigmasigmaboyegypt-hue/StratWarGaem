@@ -64,6 +64,269 @@ const UNIT_SETTINGS = {
 };
 
 // ============================================
+// AUDIO SYSTEM (Built-in, no MP3 files needed)
+// ============================================
+
+class GameAudio {
+    constructor() {
+        this.enabled = true;
+        this.volume = 0.7;
+        this.audioContext = null;
+        this.masterGain = null;
+        this.initAudio();
+    }
+
+    initAudio() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.gain.value = this.volume;
+            this.masterGain.connect(this.audioContext.destination);
+        } catch (e) {
+            console.log("Audio not supported, continuing without sound");
+            this.enabled = false;
+        }
+    }
+
+    // Soldier slash sound
+    playSlash(isCritical = false) {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(isCritical ? 200 : 150, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(isCritical ? 0.4 : 0.3, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
+
+    // Tank explosion
+    playExplosion() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(80, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+
+    // Musketeer gunshot
+    playGunshot() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
+
+    // Healer sound
+    playHeal() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    // Cavalry charge
+    playCharge() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+
+    // Death sound
+    playDeath() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    // UI placement sound
+    playPlace() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+
+    // UI delete sound
+    playDelete() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+
+    // Victory sound
+    playVictory() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        // Play a chord
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+            
+            gain.gain.setValueAtTime(0, now + i * 0.1);
+            gain.gain.linearRampToValueAtTime(0.2, now + i * 0.1 + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 1.0);
+            
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 1.0);
+        });
+    }
+
+    // Button click
+    playButton() {
+        if (!this.enabled || !this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.15, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        
+        osc.start(now);
+        osc.stop(now + 0.05);
+    }
+
+    unlock() {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    }
+}
+
+// ============================================
 // MAIN GAME CODE
 // ============================================
 
@@ -103,6 +366,7 @@ function initGame() {
     let musketEffects = [];
     let healingEffects = [];
     let damageTexts = [];
+    let bloodSplatters = [];
     let gameSpeed = 1.0;
     let baseUnitSize = 20;
     let battleStartTime = 0;
@@ -110,6 +374,13 @@ function initGame() {
     let originalCircles = [];
     let totalKills = 0;
     let highestSingleDamage = 0;
+
+    // Audio system
+    const audio = new GameAudio();
+    
+    // Unlock audio on first interaction
+    document.addEventListener('click', () => audio.unlock(), { once: true });
+    document.addEventListener('touchstart', () => audio.unlock(), { once: true });
 
     const mapPadding = 20;
 
@@ -290,6 +561,51 @@ function initGame() {
             else if (this.isHeal) { color = `rgba(46, 204, 113, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('+' + this.damage, this.x, this.y); }
             else if (this.isCritical) { color = `rgba(231, 76, 60, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('-' + this.damage, this.x, this.y); }
             else { color = `rgba(245, 125, 128, ${this.life})`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText('-' + this.damage, this.x, this.y); }
+        }
+    }
+
+    class BloodSplatter {
+        constructor(x, y, size = 1.0) {
+            this.x = x;
+            this.y = y;
+            this.particles = [];
+            this.createParticles(size);
+        }
+        
+        createParticles(size) {
+            const count = 3 + Math.floor(size * 5);
+            for (let i = 0; i < count; i++) {
+                this.particles.push({
+                    x: this.x,
+                    y: this.y,
+                    size: 1 + Math.random() * 3 * size,
+                    speedX: (Math.random() - 0.5) * 6 * size,
+                    speedY: (Math.random() - 0.5) * 6 * size,
+                    color: `rgba(231, 76, 60, ${0.5 + Math.random() * 0.3})`,
+                    life: 1.0
+                });
+            }
+        }
+        
+        update() {
+            this.particles = this.particles.filter(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.speedX *= 0.9;
+                p.speedY *= 0.9;
+                p.life -= 0.03;
+                return p.life > 0;
+            });
+            return this.particles.length > 0;
+        }
+        
+        draw() {
+            this.particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                ctx.fillStyle = p.color.replace(')', `, ${p.life})`).replace('rgb', 'rgba');
+                ctx.fill();
+            });
         }
     }
 
@@ -623,6 +939,10 @@ function initGame() {
                                 const finalDamage = !this.hasUsedFirstCharge ? Math.floor(actualDamage * 1.5) : actualDamage;
                                 closestEnemy.health -= finalDamage; this.lastAttack = now; this.totalDamageDealt += finalDamage;
                                 if (finalDamage > highestSingleDamage) highestSingleDamage = finalDamage;
+                                
+                                // Play cavalry charge attack sound
+                                audio.playCharge();
+                                
                                 damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, finalDamage, false, isCritical || !this.hasUsedFirstCharge));
                                 attackEffects.push(new AttackEffect(closestEnemy.x, closestEnemy.y, this.team, true));
                                 if (!this.hasUsedFirstCharge) this.hasUsedFirstCharge = true;
@@ -651,6 +971,10 @@ function initGame() {
                         const isCritical = damageMultiplier > 1.5;
                         closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
                         if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
+                        
+                        // Play cavalry normal attack sound
+                        audio.playCharge();
+                        
                         damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
                         attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                     }
@@ -683,6 +1007,10 @@ function initGame() {
                             const isCritical = damageMultiplier > 1.5;
                             closestEnemy.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
                             if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
+                            
+                            // Play bayonet attack sound
+                            audio.playSlash(isCritical);
+                            
                             damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
                             attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                         }
@@ -702,9 +1030,15 @@ function initGame() {
                                 const isCritical = damageMultiplier > 1.5;
                                 closestEnemy.health -= actualDamage; this.totalDamageDealt += actualDamage; this.lastShot = now;
                                 if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
+                                
+                                // Play gunshot sound
+                                audio.playGunshot();
+                                
                                 damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, actualDamage, false, isCritical));
                                 attackEffects.push(new AttackEffect(closestEnemy.x + (Math.random() - 0.5) * 8, closestEnemy.y + (Math.random() - 0.5) * 8, this.team, isCritical));
-                            } else { damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, 0, false, false, true)); }
+                            } else { 
+                                damageTexts.push(new DamageText(closestEnemy.x, closestEnemy.y - closestEnemy.radius - 8, 0, false, false, true)); 
+                            }
                             musketEffects.push(new MusketEffect(this.x, this.y, closestEnemy.x, closestEnemy.y, !miss));
                             this.lastShot = now;
                         }
@@ -782,6 +1116,10 @@ function initGame() {
                             const healAmount = Math.min(this.healPower, target.maxHealth - target.health);
                             if (healAmount > 0) {
                                 target.health += healAmount; this.lastHeal = now;
+                                
+                                // Play heal sound
+                                audio.playHeal();
+                                
                                 const healEffect = new HealingEffect(this.x, this.y, target.x, target.y, healAmount);
                                 healEffect.healingUnitId = target.id; healingEffects.push(healEffect);
                                 damageTexts.push(new DamageText(target.x, target.y - target.radius - 10, healAmount, true));
@@ -833,6 +1171,14 @@ function initGame() {
                     const isCritical = damageMultiplier > 1.5;
                     target.health -= actualDamage; this.lastAttack = now; this.totalDamageDealt += actualDamage;
                     if (actualDamage > highestSingleDamage) highestSingleDamage = actualDamage;
+                    
+                    // Play attack sound based on unit type
+                    if (this.type === 'soldier') {
+                        audio.playSlash(isCritical);
+                    } else if (this.type === 'tank') {
+                        audio.playExplosion();
+                    }
+                    
                     damageTexts.push(new DamageText(target.x, target.y - target.radius - 8, actualDamage, false, isCritical));
                     attackEffects.push(new AttackEffect(target.x + (Math.random() - 0.5) * 8, target.y + (Math.random() - 0.5) * 8, this.team, isCritical));
                 }
@@ -850,7 +1196,7 @@ function initGame() {
     }
 
     function restoreOriginalPlacements() {
-        circles = []; attackEffects = []; musketEffects = []; healingEffects = []; damageTexts = [];
+        circles = []; attackEffects = []; musketEffects = []; healingEffects = []; damageTexts = []; bloodSplatters = [];
         originalCircles.forEach(original => {
             const circle = new Circle(original.x, original.y, original.team, original.type);
             circle.health = original.maxHealth; circle.maxHealth = original.maxHealth;
@@ -903,12 +1249,25 @@ function initGame() {
         if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer" || placingMode === "cavalry") {
             let type = placingMode; let team = x < canvas.width/2 ? 'red' : 'blue';
             let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
-            if (!blocked) { circles.push(new Circle(x, y, team, type)); showNotification(`${type} placed`, 'info'); }
+            if (!blocked) { 
+                circles.push(new Circle(x, y, team, type)); 
+                
+                // Play placement sound
+                audio.playPlace();
+                
+                showNotification(`${type} placed`, 'info'); 
+            }
             else showNotification('Space occupied', 'warning');
         } else if (placingMode === "delete") {
             const beforeCount = circles.length;
             circles = circles.filter(c => Math.hypot(c.x - x, c.y - y) > c.radius);
-            if (circles.length < beforeCount) showNotification('Unit deleted', 'warning');
+            if (circles.length < beforeCount) {
+                
+                // Play delete sound
+                audio.playDelete();
+                
+                showNotification('Unit deleted', 'warning');
+            }
         }
     }
 
@@ -927,6 +1286,9 @@ function initGame() {
                     showNotification(`Placing: ${btn.textContent.replace(/[^a-zA-Z]/g, '')}`, 'info'); 
                     showGhost = true; 
                     updateActiveButton();
+                    
+                    // Play button sound
+                    audio.playButton();
                 };
             }
         });
@@ -937,15 +1299,25 @@ function initGame() {
             showNotification("Delete Tool", 'warning'); 
             showGhost = false; 
             updateActiveButton();
+            
+            // Play button sound
+            audio.playButton();
         };
         
         document.getElementById("deleteAllBtn").onclick = () => {
             if (circles.length > 0) {
                 circles = [];
+                
+                // Play delete sound
+                audio.playDelete();
+                
                 showNotification('All units deleted', 'warning');
             } else {
                 showNotification('No units to delete', 'info');
             }
+            
+            // Play button sound
+            audio.playButton();
         };
         
         document.getElementById("startPauseBtn").onclick = () => {
@@ -969,6 +1341,9 @@ function initGame() {
             }
             
             updateStartPauseButton();
+            
+            // Play button sound
+            audio.playButton();
         };
         
         document.getElementById("autoPlaceBtn").onclick = () => {
@@ -997,11 +1372,32 @@ function initGame() {
             circles.push(new Circle(canvas.width - padding - 160, canvas.height/5, 'blue', 'cavalry'));
             circles.push(new Circle(canvas.width - padding - 180, canvas.height*4/5, 'blue', 'cavalry'));
             
+            // Play placement sounds for auto-placed units
+            setTimeout(() => {
+                audio.playPlace();
+            }, 100);
+            
             showNotification('Auto-placed armies', 'info');
+            
+            // Play button sound
+            audio.playButton();
         };
         
-        playAgainHeaderBtn.onclick = () => { playAgain(); };
-        playAgainBtn.onclick = () => { playAgain(); };
+        playAgainHeaderBtn.onclick = () => { 
+            playAgain(); 
+            audio.playButton();
+        };
+        playAgainBtn.onclick = () => { 
+            playAgain(); 
+            audio.playButton();
+        };
+        
+        // Add button sounds to all other buttons
+        document.querySelectorAll('.sidebar-tab, .unit-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.playButton();
+            });
+        });
     }
 
     function gameLoop() {
@@ -1017,13 +1413,20 @@ function initGame() {
         healingEffects.forEach(effect => effect.draw());
         damageTexts = damageTexts.filter(text => text.update()); 
         damageTexts.forEach(text => text.draw());
+        bloodSplatters = bloodSplatters.filter(splatter => splatter.update());
+        bloodSplatters.forEach(splatter => splatter.draw());
 
         for (let c of circles) {
             let allies = circles.filter(x => x.team === c.team && x.health > 0);
             let enemies = circles.filter(x => x.team !== c.team && x.health > 0);
             for (let i = 0; i < gameSpeed; i++) c.updateAI(enemies, allies);
             c.draw();
-            if (c.health <= 0 && c.lastHealth > 0) totalKills++;
+            if (c.health <= 0 && c.lastHealth > 0) {
+                // Play death sound and create blood splatter
+                audio.playDeath();
+                bloodSplatters.push(new BloodSplatter(c.x, c.y, c.radius / 20));
+                totalKills++;
+            }
             c.lastHealth = c.health;
         }
 
@@ -1050,6 +1453,9 @@ function initGame() {
                 playAgainHeaderBtn.style.display = 'flex';
                 showNotification(`${winner === 'red' ? 'Red' : 'Blue'} wins!`, 'info');
                 updateStartPauseButton();
+                
+                // Play victory sound
+                audio.playVictory();
             }
         }
         requestAnimationFrame(gameLoop);
