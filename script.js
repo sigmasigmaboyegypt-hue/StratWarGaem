@@ -375,6 +375,14 @@ function initGame() {
     let totalKills = 0;
     let highestSingleDamage = 0;
 
+    // Mobile detection and performance
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let lastFrameTime = 0;
+    const MOBILE_FPS_LIMIT = isMobile ? 30 : 60;
+    const MAX_UNITS_MOBILE = isMobile ? 30 : 100;
+    let currentDpr = 1;
+
     // Audio system
     const audio = new GameAudio();
     
@@ -384,22 +392,69 @@ function initGame() {
 
     const mapPadding = 20;
 
-    // Initialize canvas size
+    // Initialize canvas size - MOBILE FIXED VERSION
     function resizeCanvas() {
         const container = canvas.parentElement;
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = container.getBoundingClientRect();
+        
+        // Set display size (CSS pixels)
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        
+        // Set actual size (device pixels)
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        
+        currentDpr = dpr;
+        
+        // Scale context for high DPI displays
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        console.log(`Canvas resized: ${rect.width}x${rect.height} (dpr: ${dpr})`);
     }
 
+    // Initial resize and event listener
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', function() {
+        setTimeout(resizeCanvas, 100);
+    });
 
-    // Update active button styling
+    // Update active button styling - ENHANCED VERSION
     function updateActiveButton() {
-        document.querySelectorAll('.unit-controls button').forEach(btn => {
+        document.querySelectorAll('.unit-controls button, .game-controls button').forEach(btn => {
+            // Remove all active classes first
             btn.classList.remove('active');
+            btn.classList.remove('active-red');
+            
+            // Add red active class for unit buttons when selected
             if (btn.dataset.type === placingMode) {
                 btn.classList.add('active');
+                btn.classList.add('active-red');
+            }
+            
+            // Special handling for delete button
+            if (placingMode === "delete" && btn.id === "deleteTool") {
+                btn.classList.add('active');
+                btn.classList.add('active-red');
+            }
+        });
+        
+        // Update sidebar unit info to match selected unit
+        const unitTabs = document.querySelectorAll('.unit-tab');
+        unitTabs.forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.unit === placingMode) {
+                tab.classList.add('active');
+            }
+        });
+        
+        const unitDetails = document.querySelectorAll('.unit-detail');
+        unitDetails.forEach(detail => {
+            detail.classList.remove('active');
+            if (detail.dataset.unit === placingMode) {
+                detail.classList.add('active');
             }
         });
     }
@@ -414,51 +469,60 @@ function initGame() {
         
         notification.classList.add('show');
         
-        setTimeout(() => notification.classList.remove('show'), 2000);
+        // Auto-hide after 2 seconds (longer for mobile)
+        setTimeout(() => notification.classList.remove('show'), isMobile ? 3000 : 2000);
     }
 
     function drawMap() {
-        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        // Clear with gradient background
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width / currentDpr, canvas.height / currentDpr);
         gradient.addColorStop(0, '#1a1a2e');
         gradient.addColorStop(1, '#16213e');
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, canvas.width / currentDpr, canvas.height / currentDpr);
         
-        const redGradient = ctx.createLinearGradient(0, 0, canvas.width/2, 0);
+        // Red team gradient
+        const redGradient = ctx.createLinearGradient(0, 0, canvas.width / (2 * currentDpr), 0);
         redGradient.addColorStop(0, 'rgba(231, 76, 60, 0.1)');
         redGradient.addColorStop(1, 'rgba(231, 76, 60, 0.05)');
         ctx.fillStyle = redGradient;
-        ctx.fillRect(0, 0, canvas.width/2, canvas.height);
+        ctx.fillRect(0, 0, canvas.width / (2 * currentDpr), canvas.height / currentDpr);
         
-        const blueGradient = ctx.createLinearGradient(canvas.width, 0, canvas.width/2, 0);
+        // Blue team gradient
+        const blueGradient = ctx.createLinearGradient(canvas.width / currentDpr, 0, canvas.width / (2 * currentDpr), 0);
         blueGradient.addColorStop(0, 'rgba(52, 152, 219, 0.1)');
         blueGradient.addColorStop(1, 'rgba(52, 152, 219, 0.05)');
         ctx.fillStyle = blueGradient;
-        ctx.fillRect(canvas.width/2, 0, canvas.width/2, canvas.height);
+        ctx.fillRect(canvas.width / (2 * currentDpr), 0, canvas.width / (2 * currentDpr), canvas.height / currentDpr);
         
+        // Center line
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.setLineDash([10, 8]);
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, 0);
-        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.moveTo(canvas.width / (2 * currentDpr), 0);
+        ctx.lineTo(canvas.width / (2 * currentDpr), canvas.height / currentDpr);
         ctx.stroke();
         ctx.setLineDash([]);
         
+        // Team labels
         ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
-        ctx.font = 'bold 18px "Segoe UI", system-ui';
+        ctx.font = `bold ${isMobile ? '14px' : '18px'} "Segoe UI", system-ui`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🔴 RED', canvas.width/4, 25);
+        ctx.fillText('🔴 RED', canvas.width / (4 * currentDpr), 25);
         
         ctx.fillStyle = 'rgba(52, 152, 219, 0.8)';
-        ctx.fillText('🔵 BLUE', canvas.width*3/4, 25);
+        ctx.fillText('🔵 BLUE', (canvas.width * 3) / (4 * currentDpr), 25);
         
+        // Battlefield border
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.rect(mapPadding, mapPadding, canvas.width - mapPadding*2, canvas.height - mapPadding*2);
+        ctx.rect(mapPadding, mapPadding, 
+                canvas.width / currentDpr - mapPadding * 2, 
+                canvas.height / currentDpr - mapPadding * 2);
         ctx.stroke();
         ctx.setLineDash([]);
     }
@@ -468,12 +532,15 @@ function initGame() {
         
         const settings = UNIT_SETTINGS[placingMode];
         let radius = baseUnitSize * settings.radiusMultiplier;
-        let team = mouseX < canvas.width/2 ? "red" : "blue";
+        let team = mouseX < (canvas.width / currentDpr) / 2 ? "red" : "blue";
         let type = placingMode;
         
         let color = team === "red" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)";
             
-        const withinBounds = mouseX > mapPadding + radius && mouseX < canvas.width - mapPadding - radius && mouseY > mapPadding + radius && mouseY < canvas.height - mapPadding - radius;
+        const withinBounds = mouseX > mapPadding + radius && 
+                            mouseX < canvas.width / currentDpr - mapPadding - radius && 
+                            mouseY > mapPadding + radius && 
+                            mouseY < canvas.height / currentDpr - mapPadding - radius;
         let blocked = circles.some(c => Math.hypot(c.x - mouseX, c.y - mouseY) < (c.radius + radius) * 0.8);
         
         if (blocked || !withinBounds) color = "rgba(231, 76, 60, 0.8)";
@@ -573,7 +640,7 @@ function initGame() {
         }
         
         createParticles(size) {
-            const count = 3 + Math.floor(size * 5);
+            const count = isMobile ? (2 + Math.floor(size * 3)) : (3 + Math.floor(size * 5));
             for (let i = 0; i < count; i++) {
                 this.particles.push({
                     x: this.x,
@@ -666,7 +733,7 @@ function initGame() {
     class Circle {
         constructor(x, y, team, type = 'soldier') {
             this.x = x; this.y = y; this.team = team; this.type = type;
-            const sizeMultiplier = Math.min(canvas.width, canvas.height) / 800;
+            const sizeMultiplier = Math.min(canvas.width / currentDpr, canvas.height / currentDpr) / 800;
             const settings = UNIT_SETTINGS[type];
             
             this.radius = baseUnitSize * settings.radiusMultiplier * sizeMultiplier;
@@ -849,6 +916,7 @@ function initGame() {
                 }
             }
             
+            // Health bar
             const barWidth = this.radius * 2;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
             ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth, 4);
@@ -860,6 +928,7 @@ function initGame() {
             ctx.fillStyle = healthColor; 
             ctx.fillRect(this.x - barWidth/2, this.y - this.radius - 8, barWidth * healthPercent, 4);
             
+            // Musketeer reload indicator
             if (this.type === 'musketeer' && !this.isCharging) {
                 const now = performance.now(); 
                 const reloadProgress = Math.min(1, (now - this.lastShot) / this.attackCooldown);
@@ -889,8 +958,8 @@ function initGame() {
                 }
             }
             this.x += pushX; this.y += pushY;
-            this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width - mapPadding - this.radius, this.x));
-            this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height - mapPadding - this.radius, this.y));
+            this.x = Math.max(mapPadding + this.radius, Math.min(canvas.width / currentDpr - mapPadding - this.radius, this.x));
+            this.y = Math.max(mapPadding + this.radius, Math.min(canvas.height / currentDpr - mapPadding - this.radius, this.y));
         }
 
         updateAI(enemies, allies) {
@@ -1223,62 +1292,144 @@ function initGame() {
         if (gameRunning) {
             startPauseBtn.innerHTML = '⏸️ Pause';
             startPauseBtn.classList.add('pause');
+            startPauseBtn.classList.add('active-red');
         } else {
             startPauseBtn.innerHTML = '▶️ Start';
             startPauseBtn.classList.remove('pause');
+            startPauseBtn.classList.remove('active-red');
         }
     }
 
     function getCanvasMousePos(event) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const dpr = currentDpr;
         let clientX, clientY;
-        if (event.type.includes('touch')) { clientX = event.touches[0].clientX; clientY = event.touches[0].clientY; }
-        else { clientX = event.clientX; clientY = event.clientY; }
-        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        
+        if (event.type.includes('touch')) {
+            if (event.touches.length > 0) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                // For touchend events
+                clientX = event.changedTouches[0].clientX;
+                clientY = event.changedTouches[0].clientY;
+            }
+        } else {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+        
+        // Convert to canvas coordinates (considering DPR)
+        return { 
+            x: (clientX - rect.left) * (canvas.width / rect.width) / dpr,
+            y: (clientY - rect.top) * (canvas.height / rect.height) / dpr
+        };
+    }
+
+    // Unit placement limit for mobile
+    function canPlaceUnit(x, y, type) {
+        if (isMobile && circles.length >= MAX_UNITS_MOBILE) {
+            showNotification(`Mobile limit: ${MAX_UNITS_MOBILE} units max`, 'warning');
+            return false;
+        }
+        
+        // Check if space is occupied
+        const settings = UNIT_SETTINGS[type];
+        const radius = baseUnitSize * settings.radiusMultiplier;
+        let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
+        
+        if (blocked) {
+            showNotification('Space occupied', 'warning');
+            return false;
+        }
+        
+        return true;
     }
 
     function handleCanvasClick(x, y) {
         if (gameRunning) return;
+        
         const settings = UNIT_SETTINGS[placingMode];
         const radius = baseUnitSize * settings.radiusMultiplier;
-        const withinBounds = x > mapPadding + radius && x < canvas.width - mapPadding - radius && y > mapPadding + radius && y < canvas.height - mapPadding - radius;
-        if (!withinBounds) { showNotification('Cannot place outside battlefield', 'warning'); return; }
+        const withinBounds = x > mapPadding + radius && 
+                           x < canvas.width / currentDpr - mapPadding - radius && 
+                           y > mapPadding + radius && 
+                           y < canvas.height / currentDpr - mapPadding - radius;
+        
+        if (!withinBounds) { 
+            showNotification('Cannot place outside battlefield', 'warning'); 
+            return; 
+        }
 
         if (placingMode === "soldier" || placingMode === "tank" || placingMode === "healer" || placingMode === "musketeer" || placingMode === "cavalry") {
-            let type = placingMode; let team = x < canvas.width/2 ? 'red' : 'blue';
-            let blocked = circles.some(c => Math.hypot(c.x - x, c.y - y) < (c.radius + radius) * 0.8);
-            if (!blocked) { 
-                circles.push(new Circle(x, y, team, type)); 
-                
-                // Play placement sound
-                audio.playPlace();
-                
-                showNotification(`${type} placed`, 'info'); 
-            }
-            else showNotification('Space occupied', 'warning');
+            let type = placingMode; 
+            let team = x < (canvas.width / currentDpr) / 2 ? 'red' : 'blue';
+            
+            if (!canPlaceUnit(x, y, type)) return;
+            
+            circles.push(new Circle(x, y, team, type)); 
+            
+            // Play placement sound
+            audio.playPlace();
+            
+            showNotification(`${type} placed`, 'info'); 
         } else if (placingMode === "delete") {
             const beforeCount = circles.length;
             circles = circles.filter(c => Math.hypot(c.x - x, c.y - y) > c.radius);
             if (circles.length < beforeCount) {
-                
                 // Play delete sound
                 audio.playDelete();
-                
                 showNotification('Unit deleted', 'warning');
+            } else {
+                showNotification('No unit to delete here', 'info');
             }
         }
     }
 
-    // Event Listeners setup
+    // Event Listeners setup - MOBILE OPTIMIZED
     function setupEventListeners() {
-        canvas.addEventListener("mousemove", e => { const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; });
-        canvas.addEventListener("click", e => { const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); });
-        canvas.addEventListener("touchmove", e => { e.preventDefault(); const pos = getCanvasMousePos(e); mouseX = pos.x; mouseY = pos.y; }, { passive: false });
-        canvas.addEventListener("touchstart", e => { e.preventDefault(); const pos = getCanvasMousePos(e); handleCanvasClick(pos.x, pos.y); }, { passive: false });
+        // Mouse events for desktop
+        canvas.addEventListener("mousemove", e => { 
+            const pos = getCanvasMousePos(e); 
+            mouseX = pos.x; 
+            mouseY = pos.y; 
+        });
+        
+        canvas.addEventListener("click", e => { 
+            const pos = getCanvasMousePos(e); 
+            handleCanvasClick(pos.x, pos.y); 
+        });
+        
+        // Touch events for mobile - with better handling
+        canvas.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+            
+            // Visual feedback for touch
+            this.style.opacity = '0.9';
+            setTimeout(() => this.style.opacity = '1', 100);
+            
+            // Handle the click/tap
+            handleCanvasClick(pos.x, pos.y);
+        }, { passive: false });
+        
+        canvas.addEventListener("touchmove", function(e) {
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+        }, { passive: false });
+        
+        canvas.addEventListener("touchend", function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // Prevent context menu on canvas
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Unit buttons
+        // Unit buttons - with enhanced active state
         document.querySelectorAll('.unit-controls button').forEach(btn => {
             if (btn.dataset.type) {
                 btn.onclick = () => { 
@@ -1306,12 +1457,12 @@ function initGame() {
         
         document.getElementById("deleteAllBtn").onclick = () => {
             if (circles.length > 0) {
-                circles = [];
-                
-                // Play delete sound
-                audio.playDelete();
-                
-                showNotification('All units deleted', 'warning');
+                if (confirm(isMobile ? "Delete all units?" : "Are you sure you want to delete all units?")) {
+                    circles = [];
+                    // Play delete sound
+                    audio.playDelete();
+                    showNotification('All units deleted', 'warning');
+                }
             } else {
                 showNotification('No units to delete', 'info');
             }
@@ -1350,27 +1501,41 @@ function initGame() {
             circles = []; 
             const padding = mapPadding + 30;
             
+            // Adjust unit counts for mobile
+            const soldierCount = isMobile ? 3 : 4;
+            const specialCount = isMobile ? 1 : 2;
+            
             // Red Team
-            for (let i = 0; i < 4; i++) circles.push(new Circle(padding + Math.random() * (canvas.width/2 - padding*2), padding + Math.random() * (canvas.height - padding*2), 'red', 'soldier'));
-            circles.push(new Circle(padding + 40, canvas.height/2 - 60, 'red', 'tank'));
-            circles.push(new Circle(padding + 80, canvas.height/2 + 60, 'red', 'tank'));
-            circles.push(new Circle(padding + 60, canvas.height/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 100, canvas.height*2/3, 'red', 'healer'));
-            circles.push(new Circle(padding + 120, canvas.height/4, 'red', 'musketeer'));
-            circles.push(new Circle(padding + 140, canvas.height*3/4, 'red', 'musketeer'));
-            circles.push(new Circle(padding + 160, canvas.height/5, 'red', 'cavalry'));
-            circles.push(new Circle(padding + 180, canvas.height*4/5, 'red', 'cavalry'));
+            for (let i = 0; i < soldierCount; i++) {
+                circles.push(new Circle(
+                    padding + Math.random() * (canvas.width / (2 * currentDpr) - padding * 2), 
+                    padding + Math.random() * (canvas.height / currentDpr - padding * 2), 
+                    'red', 'soldier'
+                ));
+            }
+            
+            if (specialCount > 0) {
+                circles.push(new Circle(padding + 40, canvas.height / (2 * currentDpr) - 60, 'red', 'tank'));
+                circles.push(new Circle(padding + 60, canvas.height / (3 * currentDpr), 'red', 'healer'));
+                circles.push(new Circle(padding + 120, canvas.height / (4 * currentDpr), 'red', 'musketeer'));
+                circles.push(new Circle(padding + 160, canvas.height / (5 * currentDpr), 'red', 'cavalry'));
+            }
             
             // Blue Team
-            for (let i = 0; i < 4; i++) circles.push(new Circle(canvas.width/2 + padding + Math.random() * (canvas.width/2 - padding*2), padding + Math.random() * (canvas.height - padding*2), 'blue', 'soldier'));
-            circles.push(new Circle(canvas.width - padding - 40, canvas.height/2 - 60, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 80, canvas.height/2 + 60, 'blue', 'tank'));
-            circles.push(new Circle(canvas.width - padding - 60, canvas.height/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 100, canvas.height*2/3, 'blue', 'healer'));
-            circles.push(new Circle(canvas.width - padding - 120, canvas.height/4, 'blue', 'musketeer'));
-            circles.push(new Circle(canvas.width - padding - 140, canvas.height*3/4, 'blue', 'musketeer'));
-            circles.push(new Circle(canvas.width - padding - 160, canvas.height/5, 'blue', 'cavalry'));
-            circles.push(new Circle(canvas.width - padding - 180, canvas.height*4/5, 'blue', 'cavalry'));
+            for (let i = 0; i < soldierCount; i++) {
+                circles.push(new Circle(
+                    canvas.width / (2 * currentDpr) + padding + Math.random() * (canvas.width / (2 * currentDpr) - padding * 2), 
+                    padding + Math.random() * (canvas.height / currentDpr - padding * 2), 
+                    'blue', 'soldier'
+                ));
+            }
+            
+            if (specialCount > 0) {
+                circles.push(new Circle(canvas.width / currentDpr - padding - 40, canvas.height / (2 * currentDpr) - 60, 'blue', 'tank'));
+                circles.push(new Circle(canvas.width / currentDpr - padding - 60, canvas.height / (3 * currentDpr), 'blue', 'healer'));
+                circles.push(new Circle(canvas.width / currentDpr - padding - 120, canvas.height / (4 * currentDpr), 'blue', 'musketeer'));
+                circles.push(new Circle(canvas.width / currentDpr - padding - 160, canvas.height / (5 * currentDpr), 'blue', 'cavalry'));
+            }
             
             // Play placement sounds for auto-placed units
             setTimeout(() => {
@@ -1398,9 +1563,26 @@ function initGame() {
                 audio.playButton();
             });
         });
+        
+        // Mobile help button
+        const mobileHelpBtn = document.getElementById('mobileHelpBtn');
+        if (mobileHelpBtn && isMobile) {
+            mobileHelpBtn.addEventListener('click', function() {
+                const message = '🕹️ MOBILE CONTROLS:\n\n• Tap unit buttons to select\n• Tap battlefield to place\n• "Auto Place" for quick setup\n• "Start" begins the battle\n• Rotate device for landscape\n\n🎯 TIP: Mix unit types for best results!';
+                alert(message);
+                audio.playButton();
+            });
+        }
     }
 
-    function gameLoop() {
+    function gameLoop(currentTime) {
+        // Throttle FPS on mobile for better performance
+        if (isMobile && currentTime - lastFrameTime < 1000 / MOBILE_FPS_LIMIT) {
+            requestAnimationFrame(gameLoop);
+            return;
+        }
+        lastFrameTime = currentTime;
+        
         drawMap(); 
         drawGhost();
         
@@ -1463,10 +1645,17 @@ function initGame() {
 
     // Initialize
     function init() {
-        showNotification('Click to place units', 'info');
+        showNotification(isMobile ? 'Tap to place units' : 'Click to place units', 'info');
         setupEventListeners();
         updateActiveButton();
         updateStartPauseButton();
+        
+        // Hide mobile loading screen
+        setTimeout(() => {
+            const loading = document.getElementById('mobileLoading');
+            if (loading) loading.style.display = 'none';
+        }, 500);
+        
         gameLoop();
     }
 
