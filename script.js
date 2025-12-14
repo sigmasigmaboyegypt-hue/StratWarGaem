@@ -1306,13 +1306,15 @@ function initGame() {
         let clientX, clientY;
         
         if (event.type.includes('touch')) {
-            if (event.touches.length > 0) {
+            if (event.touches && event.touches.length > 0) {
                 clientX = event.touches[0].clientX;
                 clientY = event.touches[0].clientY;
-            } else {
+            } else if (event.changedTouches && event.changedTouches.length > 0) {
                 // For touchend events
                 clientX = event.changedTouches[0].clientX;
                 clientY = event.changedTouches[0].clientY;
+            } else {
+                return { x: 0, y: 0 };
             }
         } else {
             clientX = event.clientX;
@@ -1356,6 +1358,43 @@ function initGame() {
                            y > mapPadding + radius && 
                            y < canvas.height / currentDpr - mapPadding - radius;
         
+        if (placingMode === "delete") {
+            // DELETE MODE: Find and delete the closest unit
+            let closestUnit = null;
+            let closestDistance = Infinity;
+            let deleteIndex = -1;
+            
+            for (let i = 0; i < circles.length; i++) {
+                const c = circles[i];
+                const dist = Math.hypot(c.x - x, c.y - y);
+                
+                // Check if click is within the unit's radius (with a little padding)
+                if (dist < c.radius + 5 && dist < closestDistance) {
+                    closestDistance = dist;
+                    closestUnit = c;
+                    deleteIndex = i;
+                }
+            }
+            
+            if (closestUnit) {
+                // Remove the unit
+                circles.splice(deleteIndex, 1);
+                
+                // Play delete sound
+                audio.playDelete();
+                
+                // Create a small visual effect
+                bloodSplatters.push(new BloodSplatter(closestUnit.x, closestUnit.y, 0.5));
+                
+                showNotification(`${closestUnit.type} deleted`, 'warning');
+                return;
+            } else {
+                showNotification('No unit to delete here', 'info');
+                return;
+            }
+        }
+        
+        // PLACEMENT MODE
         if (!withinBounds) { 
             showNotification('Cannot place outside battlefield', 'warning'); 
             return; 
@@ -1373,16 +1412,6 @@ function initGame() {
             audio.playPlace();
             
             showNotification(`${type} placed`, 'info'); 
-        } else if (placingMode === "delete") {
-            const beforeCount = circles.length;
-            circles = circles.filter(c => Math.hypot(c.x - x, c.y - y) > c.radius);
-            if (circles.length < beforeCount) {
-                // Play delete sound
-                audio.playDelete();
-                showNotification('Unit deleted', 'warning');
-            } else {
-                showNotification('No unit to delete here', 'info');
-            }
         }
     }
 
@@ -1447,7 +1476,7 @@ function initGame() {
         // Control buttons
         document.getElementById("deleteTool").onclick = () => { 
             placingMode = "delete"; 
-            showNotification("Delete Tool", 'warning'); 
+            showNotification("Delete Tool - Tap units to remove", 'warning'); 
             showGhost = false; 
             updateActiveButton();
             
