@@ -6,27 +6,27 @@
     
     <!-- BASIC META TAGS -->
     <title>Neon Battle Simulator - Tactical War Game</title>
-    <meta name="description" content="Command armies in this tactical battle simulator. Place soldiers, tanks, healers, musketeers, and cavalry. Watch them fight in real-time!">
-    <meta name="keywords" content="battle simulator, strategy game, war game, tactical, units, real-time combat">
+    <meta name="description" content="Command armies in this tactical battle simulator. Place soldiers, tanks, healers, musketeers, cavalry, and the General hero unit. Watch them fight in real-time!">
+    <meta name="keywords" content="battle simulator, strategy game, war game, tactical, units, real-time combat, general hero">
     <meta name="author" content="Neon Battle Simulator">
     
     <!-- OPEN GRAPH (Facebook, Discord, Messenger) -->
     <meta property="og:title" content="Neon Battle Simulator - Tactical War Game">
-    <meta property="og:description" content="Command armies in this tactical battle simulator. Place soldiers, tanks, healers, musketeers, and cavalry. Watch them fight in real-time!">
+    <meta property="og:description" content="Command armies with the General hero unit. Form square, circle, line, wedge, and phalanx formations!">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://stratwargaem.pages.dev">
     <meta property="og:image" content="https://stratwargaem.pages.dev/embed-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Neon Battle Simulator - Tactical War Game">
+    <meta property="og:image:alt" content="Neon Battle Simulator with General Hero Unit">
     <meta property="og:site_name" content="Neon Battle Simulator">
     
     <!-- TWITTER CARD -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Neon Battle Simulator - Tactical War Game">
-    <meta name="twitter:description" content="Command armies in this tactical battle simulator. Place soldiers, tanks, healers, musketeers, and cavalry. Watch them fight in real-time!">
+    <meta name="twitter:description" content="Command armies with the General hero unit. Form square, circle, line, wedge, and phalanx formations!">
     <meta name="twitter:image" content="https://stratwargaem.pages.dev/embed-image.png">
-    <meta name="twitter:image:alt" content="Neon Battle Simulator screenshot">
+    <meta name="twitter:image:alt" content="Neon Battle Simulator screenshot with General">
     
     <!-- DISCORD SPECIFIC -->
     <meta name="theme-color" content="#1a1a2e">
@@ -62,6 +62,7 @@
                 <button class="special-btn" id="placeMusketeer" data-type="musketeer" data-short="Musk">🎯 Musketeer</button>
                 <button class="special-btn" id="placeHealer" data-type="healer" data-short="Heal">❤️ Healer</button>
                 <button class="cavalry-btn" id="placeCavalry" data-type="cavalry" data-short="Cav">🐎 Cavalry</button>
+                <button class="hero-btn" id="placeGeneral" data-type="general" data-short="Gen">🎖️ General</button>
             </div>
             
             <!-- Game Control Buttons -->
@@ -73,6 +74,14 @@
                 <button class="play-again-header-btn" id="playAgainHeaderBtn" style="display: none;" data-short="Again">🔁 Play Again</button>
             </div>
         </div>
+    </div>
+
+    <!-- General Status Displays -->
+    <div class="general-status" id="redGeneralStatus" style="display: none;">
+        🎖️ Red General: <span id="redGeneralCooldown">Ready!</span>
+    </div>
+    <div class="general-status" id="blueGeneralStatus" style="display: none;">
+        🎖️ Blue General: <span id="blueGeneralCooldown">Ready!</span>
     </div>
 
     <div class="notification" id="notification">Click to place units</div>
@@ -110,6 +119,30 @@
                         <span>Status:</span>
                         <span id="gameStatus">Paused</span>
                     </div>
+                    <div class="stat-row">
+                        <span>Kills:</span>
+                        <span id="killCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Highest Damage:</span>
+                        <span id="damageRecord">0</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>🎖️ General Status</h3>
+                    <div class="stat-row">
+                        <span>🔴 Red General:</span>
+                        <span id="redGeneralHealth">Not Placed</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>🔵 Blue General:</span>
+                        <span id="blueGeneralHealth">Not Placed</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Active Formations:</span>
+                        <span id="activeFormations">None</span>
+                    </div>
                 </div>
             </div>
             
@@ -134,37 +167,54 @@
                                    • 🛡️ Tank - High health, slow<br>
                                    • ❤️ Healer - Heals allies<br>
                                    • 🎯 Musketeer - Ranged attacker<br>
-                                   • 🐎 Cavalry - Fast with charge ability</p>
+                                   • 🐎 Cavalry - Fast with charge ability<br>
+                                   • 🎖️ General - Hero unit (1 per team)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="instruction">
+                            <div class="instruction-icon">🎖️</div>
+                            <div class="instruction-text">
+                                <strong>3. General - Hero Unit</strong>
+                                <p>• Only ONE per team<br>
+                                   • 210 HP, 22 Damage<br>
+                                   • 45s ability cooldown<br>
+                                   • Commands formations: Square/Circle/Line/Wedge/Phalanx<br>
+                                   • Inspires nearby allies (+10% damage)<br>
+                                   • Death causes morale penalty</p>
                             </div>
                         </div>
                         
                         <div class="instruction">
                             <div class="instruction-icon">🚀</div>
                             <div class="instruction-text">
-                                <strong>3. Start Battle</strong>
-                                <p>Click "Start" to begin the simulation. Units will automatically fight.</p>
+                                <strong>4. Start Battle</strong>
+                                <p>Click "Start" to begin the simulation. Units will automatically fight. Generals will command formations.</p>
                             </div>
                         </div>
                         
                         <div class="instruction">
                             <div class="instruction-icon">🛠️</div>
                             <div class="instruction-text">
-                                <strong>4. Controls</strong>
+                                <strong>5. Controls</strong>
                                 <p>• 🗑️ Delete - Remove units<br>
                                    • 🔥 Delete All - Clear battlefield<br>
                                    • 🤖 Auto Place - Pre-made armies<br>
-                                   • ⏸️/▶️ - Pause/Resume battle</p>
+                                   • ⏸️/▶️ - Pause/Resume battle<br>
+                                   • 🔁 Play Again - Reset game</p>
                             </div>
                         </div>
                         
                         <div class="instruction">
                             <div class="instruction-icon">🎯</div>
                             <div class="instruction-text">
-                                <strong>5. Strategy Tips</strong>
+                                <strong>6. Strategy Tips</strong>
                                 <p>• Mix unit types for balanced army<br>
                                    • Healers behind front lines<br>
                                    • Use cavalry for flanking attacks<br>
-                                   • Tanks as damage absorbers</p>
+                                   • Tanks as damage absorbers<br>
+                                   • Protect your General at all costs<br>
+                                   • Time formations with enemy attacks</p>
                             </div>
                         </div>
                         
@@ -175,7 +225,8 @@
                                 <p>• Tap buttons to select units<br>
                                    • Tap battlefield to place<br>
                                    • Use Auto Place for quick setup<br>
-                                   • Rotate device for different views</p>
+                                   • Rotate device for different views<br>
+                                   • One General per team maximum</p>
                             </div>
                         </div>
                     </div>
@@ -193,6 +244,7 @@
                         <button class="unit-tab" data-unit="healer">❤️ Healer</button>
                         <button class="unit-tab" data-unit="musketeer">🎯 Musketeer</button>
                         <button class="unit-tab" data-unit="cavalry">🐎 Cavalry</button>
+                        <button class="unit-tab" data-unit="general">🎖️ General</button>
                     </div>
                     
                     <div class="unit-details">
@@ -310,6 +362,35 @@
                                 Fast cavalry with charge ability. Great for flanking and disrupting enemy formations.
                             </div>
                         </div>
+                        
+                        <!-- General Info -->
+                        <div class="unit-detail" data-unit="general">
+                            <div class="unit-stat">
+                                <span>Health:</span>
+                                <span class="stat-value">210</span>
+                            </div>
+                            <div class="unit-stat">
+                                <span>Damage:</span>
+                                <span class="stat-value">22</span>
+                            </div>
+                            <div class="unit-stat">
+                                <span>Ability Cooldown:</span>
+                                <span class="stat-value">45s</span>
+                            </div>
+                            <div class="unit-stat">
+                                <span>Aura Damage Boost:</span>
+                                <span class="stat-value">+10%</span>
+                            </div>
+                            <div class="unit-stat">
+                                <span>Command Range:</span>
+                                <span class="stat-value">150</span>
+                            </div>
+                            <div class="unit-desc">
+                                Hero unit (limit: 1 per team). Inspires nearby allies (+10% damage). 
+                                Can command formations every 45 seconds: Square (vs cavalry), Circle (surrounded), 
+                                Line (standard), Wedge (attack), Phalanx (defense). His death demoralizes allies.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -328,7 +409,8 @@
                 ⏱️ Battle lasted: <span id="finalTime">0</span> seconds<br>
                 👥 Remaining units: <span id="remainingUnits">0</span><br>
                 ⚔️ Total kills: <span id="totalKills">0</span><br>
-                💥 Highest damage: <span id="highestDamage">0</span>
+                💥 Highest damage: <span id="highestDamage">0</span><br>
+                🎖️ General alive: <span id="generalAlive">No</span>
             </div>
             <div class="play-again-container">
                 <button class="play-again-btn" id="playAgainBtn">
@@ -361,8 +443,8 @@
             mobileHelpBtn.addEventListener('click', function() {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 const message = isMobile 
-                    ? '🕹️ MOBILE CONTROLS:\n\n• Tap unit buttons to select\n• Tap battlefield to place\n• Use "Auto Place" for quick setup\n• "Start" begins the battle\n• Rotate device for different views\n\n🎯 TIP: Place healers behind your front line!'
-                    : '🎮 DESKTOP CONTROLS:\n\n• Click unit buttons to select\n• Click battlefield to place\n• Use "Auto Place" for balanced armies\n• "Start" begins the simulation\n• Watch tactical combat unfold\n\n🎯 TIP: Mix unit types for best results!';
+                    ? '🕹️ MOBILE CONTROLS:\n\n• Tap unit buttons to select\n• Tap battlefield to place\n• Use "Auto Place" for quick setup\n• "Start" begins the battle\n• Rotate device for different views\n\n🎖️ GENERAL UNIT:\n• Only 1 per team\n• Commands formations (45s cooldown)\n• +10% damage aura to nearby allies\n• Death demoralizes your army'
+                    : '🎮 DESKTOP CONTROLS:\n\n• Click unit buttons to select\n• Click battlefield to place\n• Use "Auto Place" for balanced armies\n• "Start" begins the simulation\n• Watch tactical combat unfold\n\n🎖️ GENERAL UNIT:\n• Only 1 per team\n• Commands formations (45s cooldown)\n• +10% damage aura to nearby allies\n• Death demoralizes your army';
                 
                 alert(message);
             });
@@ -418,7 +500,7 @@
         "@context": "https://schema.org",
         "@type": "VideoGame",
         "name": "Neon Battle Simulator",
-        "description": "Command armies in this tactical battle simulator. Place soldiers, tanks, healers, musketeers, and cavalry. Watch them fight in real-time!",
+        "description": "Command armies with the General hero unit. Place soldiers, tanks, healers, musketeers, and cavalry. Watch them fight in real-time with tactical formations!",
         "url": "https://stratwargaem.pages.dev",
         "applicationCategory": "Game",
         "genre": ["Strategy", "Simulation", "Tactical"],
@@ -429,7 +511,7 @@
         },
         "screenshot": "https://stratwargaem.pages.dev/embed-image.png",
         "contentRating": "E",
-        "keywords": "battle simulator, strategy game, war game, tactical, real-time combat",
+        "keywords": "battle simulator, strategy game, war game, tactical, general hero, real-time combat, formations",
         "operatingSystem": "Web Browser",
         "device": "Desktop, Mobile, Tablet"
     }
